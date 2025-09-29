@@ -5,150 +5,45 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Random Aesthetic Interior — Refresh for a new photo</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--glass: rgba(255,255,255,0.06)}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:linear-gradient(180deg,#071026 0%, #0b1220 100%);color:#eef2ff}
-    .wrap{min-height:100vh;display:grid;place-items:center;padding:36px}
-    .card{width:min(1100px,96vw);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
-
-    .hero{position:relative;height:64vh;min-height:420px;display:flex;align-items:center;justify-content:center;background:#000}
-    .hero img{width:100%;height:100%;object-fit:cover;display:block;filter:contrast(1.02) saturate(1.05);transform:scale(1);transition:opacity .6s ease, transform 10s linear}
-    .hero .overlay{position:absolute;inset:0;background:linear-gradient(180deg, rgba(8,10,14,0.18), rgba(3,6,10,0.5));backdrop-filter: blur(6px)}
-
-    .controls{position:absolute;left:18px;bottom:18px;display:flex;gap:10px;align-items:center}
-    .btn{appearance:none;border:0;padding:10px 14px;border-radius:10px;background:var(--glass);color:inherit;font-weight:600;cursor:pointer;backdrop-filter: blur(6px);box-shadow:0 6px 18px rgba(2,6,23,0.6)}
-    .btn:active{transform:translateY(1px)}
-
-    .meta{position:absolute;right:18px;bottom:18px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:10px 14px;border-radius:10px;font-size:14px;color:#cbd5e1}
-    .meta a{color:#cbd5e1;text-decoration:none;font-weight:600}
-
-    .toolbar{display:flex;gap:14px;align-items:center;padding:18px;border-top:1px solid rgba(255,255,255,0.02);background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));}
-    .left{display:flex;gap:8px;align-items:center}
-    .title{font-size:18px;font-weight:700}
-    .hint{font-size:13px;color:#9aa6bd}
-
-    .keywords{margin-left:12px;font-size:13px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.02);color:#aab7cc}
-
-    /* responsive */
-    @media (max-width:640px){.hero{height:56vh;min-height:320px}.meta{right:12px;bottom:12px}}
-
-    /* subtle loading */
-    .loading-shimmer{position:absolute;inset:0;background:linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.02) 100%);opacity:0;pointer-events:none;transition:opacity .2s}
-    .loading .loading-shimmer{opacity:1}
-    .fade-in{opacity:0;transform:scale(1.02);transition:opacity .8s ease, transform .8s ease}
-    .fade-in.visible{opacity:1;transform:scale(1)}
+    body {margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#0f1724;font-family:Arial,sans-serif;color:#fff}
+    .card {max-width:90vw;max-height:90vh;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+    .hero {position:relative;width:100%;height:100%}
+    .hero img {width:100%;height:100%;object-fit:cover;display:block}
+    .controls {position:absolute;bottom:12px;left:12px;display:flex;gap:10px}
+    .btn {padding:8px 14px;border:none;border-radius:8px;background:rgba(255,255,255,0.2);color:#fff;cursor:pointer;font-weight:bold}
+    .btn:hover {background:rgba(255,255,255,0.35)}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" role="article" aria-label="Random Aesthetic Interior Photo">
-      <div class="hero" id="hero">
-        <div class="loading-shimmer" aria-hidden="true"></div>
-        <img id="photo" alt="A random aesthetically pleasing interior or design photo" class="fade-in">
-        <div class="overlay"></div>
-
-        <div class="controls">
-          <button class="btn" id="newBtn" title="Get a new photo (also press R)">⟳ New</button>
-          <button class="btn" id="downloadBtn" title="Open image in new tab to download">⇩ Download</button>
-          <button class="btn" id="toggleBlur" title="Toggle subtle parallax zoom">Zoom</button>
-        </div>
-
-        <div class="meta" id="meta">Keywords: <span id="kw">interior, design, cozy</span></div>
-      </div>
-
-      <div class="toolbar">
-        <div class="left">
-          <div class="title">Random Aesthetic Interiors</div>
-          <div class="hint">Refresh or press <strong>R</strong> to change the photo</div>
-          <div class="keywords" id="keywordPill">interior · cozy · modern</div>
-        </div>
+  <div class="card">
+    <div class="hero">
+      <img id="photo" alt="A random aesthetically pleasing interior or design photo">
+      <div class="controls">
+        <button class="btn" id="newBtn">⟳ New</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Keywords to vary the Unsplash query. Tweak to taste.
-    const keywordGroups = [
-      ['interior','design','cozy'],
-      ['minimal','interior','scandinavian'],
-      ['modern','living room','interior'],
-      ['bedroom','cozy','aesthetic'],
-      ['kitchen','interior','stylish'],
-      ['minimalist','workspace','design'],
-      ['loft','industrial','interior'],
-      ['vintage','interior','retro'],
-      ['boho','interior','plants'],
-      ['bathroom','spa','interior']
-    ];
-
     const photo = document.getElementById('photo');
-    const kw = document.getElementById('kw');
-    const keywordPill = document.getElementById('keywordPill');
     const newBtn = document.getElementById('newBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const hero = document.getElementById('hero');
-    const toggleBlur = document.getElementById('toggleBlur');
-
-    let zoomEnabled = false;
-
-    function pickKeywords(){
-      const set = keywordGroups[Math.floor(Math.random()*keywordGroups.length)];
-      return set.join(',');
-    }
 
     function loadRandom(){
-      // show shimmer
-      hero.classList.add('loading');
-      photo.classList.remove('visible');
-      const keywords = pickKeywords();
-      const encoded = encodeURIComponent(keywords);
-      // source.unsplash.com will redirect to a photo matching the query
-      // add sig to bypass cache
-      const url = `https://source.unsplash.com/1600x900/?${encoded}&sig=${Date.now()}`;
-      kw.textContent = keywords;
-      keywordPill.textContent = keywords.replace(/,/g,' · ');
-      // start loading
+      // Use Unsplash first
+      const url = `https://source.unsplash.com/random/1600x900/?interior,design,cozy&sig=${Date.now()}`;
       photo.src = url;
-      // When the image finishes loading, reveal it with a fade.
-      photo.onload = ()=>{
-        hero.classList.remove('loading');
-        requestAnimationFrame(()=>{
-          photo.classList.add('visible');
-        });
-      };
-      photo.onerror = ()=>{
-        hero.classList.remove('loading');
-        // fallback to a tiny embedded SVG to avoid broken UI
-        photo.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'><rect width=\'100%\' height=\'100%\' fill=\'#0b1220\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'#9aa6bd\' font-family=\'Arial\' font-size=36>No image available</text></svg>`);
-      };
 
-      // Update download link
-      downloadBtn.onclick = ()=>{
-        // open the raw image URL in a new tab so user can download/inspect
-        window.open(photo.src, '_blank', 'noopener');
+      // fallback to Picsum if Unsplash fails
+      photo.onerror = ()=>{
+        photo.src = `https://picsum.photos/1600/900?random=${Date.now()}`;
       };
     }
 
-    // keyboard shortcut
-    document.addEventListener('keydown', (e)=>{
-      if(e.key.toLowerCase() === 'r') loadRandom();
-    });
-
     newBtn.addEventListener('click', loadRandom);
-
-    toggleBlur.addEventListener('click', ()=>{
-      zoomEnabled = !zoomEnabled;
-      if(zoomEnabled){
-        photo.style.transition = 'transform 12s linear';
-        photo.style.transform = 'scale(1.08)';
-        toggleBlur.textContent = 'Zoom ✓';
-      } else {
-        photo.style.transform = 'scale(1)';
-        toggleBlur.textContent = 'Zoom';
-      }
+    document.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase()==='r') loadRandom();
     });
 
-    // load first image
     loadRandom();
   </script>
 </body>
