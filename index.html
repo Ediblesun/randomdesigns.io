@@ -3,11 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Aesthetic Interiors + Space Station Soma</title>
+  <title>Synthwave Terminal</title>
   <style>
     body {
       margin:0;
+      height:100vh;
+      background:black;
+      font-family: 'Courier New', monospace;
+      overflow:hidden;
+      color:#00ffcc;
+    }
+
+    /* --- Loading Screen --- */
+    #loadingScreen {
       display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      width:100vw;
+      background:radial-gradient(circle at bottom, #ff0080, #7928ca, #0f0f1f);
+      font-size:3em;
+      color:#fff;
+      text-shadow:0 0 20px #ff00ff, 0 0 40px #00ffff;
+      animation:fadeOut 1s ease forwards;
+      animation-delay:3s;
+    }
+    #loadingText {
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse {
+      from {opacity:0.4;}
+      to {opacity:1;}
+    }
+    @keyframes fadeOut {
+      to {opacity:0; visibility:hidden;}
+    }
+
+    /* --- Terminal --- */
+    #terminal {
+      display:none;
+      padding:20px;
+      height:100vh;
+      width:100vw;
+      background:black;
+      color:#33ff33;
+      font-size:1.2em;
+    }
+    .input-line {display:flex;}
+    .prompt {margin-right:10px;}
+    #commandInput {
+      background:none;
+      border:none;
+      color:#33ff33;
+      outline:none;
+      font-size:1.2em;
+      flex:1;
+    }
+
+    /* --- Design Page --- */
+    #designPage {
+      display:none;
       flex-direction:column;
       justify-content:center;
       align-items:center;
@@ -41,30 +96,77 @@
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="hero">
-      <img id="photo" alt="A random aesthetically pleasing interior or design photo">
-      <div class="controls">
-        <button class="btn" id="newBtn">⟳ New</button>
-      </div>
+  <!-- Loading Screen -->
+  <div id="loadingScreen">
+    <div id="loadingText">LOADING...</div>
+  </div>
+
+  <!-- Terminal -->
+  <div id="terminal">
+    <div>Welcome to SynthwaveOS v1.0</div>
+    <div>Type <b>design</b> to access the interior viewer.</div>
+    <div class="input-line">
+      <span class="prompt">&gt;</span>
+      <input type="text" id="commandInput" autofocus />
     </div>
   </div>
 
-  <!-- Audio Player -->
-  <div class="audio-player">
-    <audio id="radio" controls muted>
-      <source src="https://ice2.somafm.com/spacestation-128-mp3" type="audio/mpeg">
-      Your browser does not support the audio element.
-    </audio>
-    <div class="time" id="timeLeft">Click anywhere to start Space Station Soma 🎵</div>
+  <!-- Design Page -->
+  <div id="designPage">
+    <div class="card">
+      <div class="hero">
+        <img id="photo" alt="A random aesthetically pleasing interior or design photo">
+        <div class="controls">
+          <button class="btn" id="newBtn">⟳ New</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="audio-player">
+      <audio id="radio" controls muted>
+        <source src="https://ice2.somafm.com/spacestation-128-mp3" type="audio/mpeg">
+      </audio>
+      <div class="time" id="timeLeft">Click anywhere to start Space Station Soma 🚀</div>
+    </div>
   </div>
 
   <script>
+    const terminal = document.getElementById('terminal');
+    const designPage = document.getElementById('designPage');
+    const loadingScreen = document.getElementById('loadingScreen');
+    const commandInput = document.getElementById('commandInput');
+
     const photo = document.getElementById('photo');
     const newBtn = document.getElementById('newBtn');
     const radio = document.getElementById('radio');
     const timeLeft = document.getElementById('timeLeft');
 
+    // Show terminal after loading screen
+    setTimeout(()=>{ 
+      loadingScreen.style.display="none"; 
+      terminal.style.display="block"; 
+      commandInput.focus();
+    }, 4000);
+
+    // Terminal command handler
+    commandInput.addEventListener('keydown', (e)=>{
+      if(e.key==="Enter"){
+        const cmd = commandInput.value.trim().toLowerCase();
+        if(cmd==="design"){
+          terminal.style.display="none";
+          designPage.style.display="flex";
+          loadRandom();
+        } else {
+          const div = document.createElement("div");
+          div.textContent = "Unknown command: "+cmd;
+          terminal.insertBefore(div, terminal.querySelector(".input-line"));
+        }
+        commandInput.value="";
+      }
+    });
+
+    // Image loader
     function loadRandom(){
       const url = `https://source.unsplash.com/random/1600x900/?interior,design,cozy&sig=${Date.now()}`;
       photo.src = url;
@@ -73,9 +175,10 @@
       };
     }
 
+    // Music start
     function startMusic(){
       if(radio.paused){
-        radio.muted = false; // unmute after user click
+        radio.muted = false;
         radio.play().then(()=>{
           timeLeft.textContent = "Now playing: Space Station Soma 🚀";
         }).catch(err=>{
@@ -84,18 +187,12 @@
       }
     }
 
-    // First click anywhere starts audio
-    document.body.addEventListener('click', startMusic, { once: true });
-    // Also tie to button & key
+    // Interactions
+    document.body.addEventListener('click', startMusic, { once:true });
     newBtn.addEventListener('click', ()=>{ loadRandom(); startMusic(); });
     document.addEventListener('keydown', (e)=>{
-      if(e.key.toLowerCase()==='r'){ 
-        loadRandom(); 
-        startMusic(); 
-      }
+      if(e.key.toLowerCase()==='r'){ loadRandom(); startMusic(); }
     });
-
-    loadRandom();
   </script>
 </body>
 </html>
