@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Random Aesthetic Interior + Lofi Radio</title>
+  <title>Aesthetic Interiors + Space Station Soma</title>
   <style>
     body {
       margin:0;
@@ -52,11 +52,11 @@
 
   <!-- Audio Player -->
   <div class="audio-player">
-    <audio id="radio" controls>
-      <source src="https://ice1.somafm.com/lofi-128-mp3" type="audio/mpeg">
+    <audio id="radio" controls muted>
+      <source src="https://ice2.somafm.com/spacestation-128-mp3" type="audio/mpeg">
       Your browser does not support the audio element.
     </audio>
-    <div class="time" id="timeLeft">Click anywhere to start music 🎵</div>
+    <div class="time" id="timeLeft">Click anywhere to start Space Station Soma 🎵</div>
   </div>
 
   <script>
@@ -65,7 +65,6 @@
     const radio = document.getElementById('radio');
     const timeLeft = document.getElementById('timeLeft');
 
-    // Load random background image
     function loadRandom(){
       const url = `https://source.unsplash.com/random/1600x900/?interior,design,cozy&sig=${Date.now()}`;
       photo.src = url;
@@ -74,33 +73,27 @@
       };
     }
 
-    // Button & keyboard controls
-    newBtn.addEventListener('click', ()=>{
-      loadRandom();
-      startMusic();
-    });
-    document.addEventListener('keydown', (e)=>{
-      if(e.key.toLowerCase()==='r'){ 
-        loadRandom(); 
-        startMusic();
-      }
-    });
-
-    // Start audio on first click anywhere
-    document.body.addEventListener('click', ()=>{
-      startMusic();
-    }, { once: true });
-
-    // Play audio function
     function startMusic(){
       if(radio.paused){
+        radio.muted = false; // unmute after user click
         radio.play().then(()=>{
-          timeLeft.textContent = "Live lofi radio 🎶";
+          timeLeft.textContent = "Now playing: Space Station Soma 🚀";
         }).catch(err=>{
-          console.log("Autoplay blocked:", err);
+          console.log("Play error:", err);
         });
       }
     }
+
+    // First click anywhere starts audio
+    document.body.addEventListener('click', startMusic, { once: true });
+    // Also tie to button & key
+    newBtn.addEventListener('click', ()=>{ loadRandom(); startMusic(); });
+    document.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase()==='r'){ 
+        loadRandom(); 
+        startMusic(); 
+      }
+    });
 
     loadRandom();
   </script>
