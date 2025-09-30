@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Synthwave Terminal</title>
+  <title>Synthwave Terminal → Design Viewer</title>
   <style>
     body {
       margin:0;
@@ -14,32 +14,32 @@
       color:#00ffcc;
     }
 
-    /* --- Loading Screen --- */
+    /* Loading Screen */
     #loadingScreen {
+      position:absolute;
+      top:0; left:0;
+      width:100vw; height:100vh;
       display:flex;
       justify-content:center;
       align-items:center;
-      height:100vh;
-      width:100vw;
       background:radial-gradient(circle at bottom, #ff0080, #7928ca, #0f0f1f);
-      font-size:3em;
       color:#fff;
+      font-size:3em;
       text-shadow:0 0 20px #ff00ff, 0 0 40px #00ffff;
-      animation:fadeOut 1s ease forwards;
-      animation-delay:3s;
+      z-index:10;
     }
     #loadingText {
-      animation: pulse 1s infinite alternate;
+      opacity:0;
+      animation: fadeInOut 4s forwards;
     }
-    @keyframes pulse {
-      from {opacity:0.4;}
-      to {opacity:1;}
-    }
-    @keyframes fadeOut {
-      to {opacity:0; visibility:hidden;}
+    @keyframes fadeInOut {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
     }
 
-    /* --- Terminal --- */
+    /* Terminal */
     #terminal {
       display:none;
       padding:20px;
@@ -48,9 +48,10 @@
       background:black;
       color:#33ff33;
       font-size:1.2em;
+      white-space: pre-wrap;
     }
-    .input-line {display:flex;}
-    .prompt {margin-right:10px;}
+    .input-line { display:flex; margin-top:1em; }
+    .prompt { margin-right:10px; }
     #commandInput {
       background:none;
       border:none;
@@ -60,7 +61,7 @@
       flex:1;
     }
 
-    /* --- Design Page --- */
+    /* Design Page */
     #designPage {
       display:none;
       flex-direction:column;
@@ -78,9 +79,9 @@
       overflow:hidden;
       box-shadow:0 10px 40px rgba(0,0,0,0.6);
     }
-    .hero {position:relative;width:100%;height:100%}
-    .hero img {width:100%;height:100%;object-fit:cover;display:block}
-    .controls {position:absolute;bottom:12px;left:12px;display:flex;gap:10px}
+    .hero { position:relative; width:100%; height:100%; }
+    .hero img { width:100%; height:100%; object-fit:cover; display:block; }
+    .controls { position:absolute; bottom:12px; left:12px; display:flex; gap:10px; }
     .btn {
       padding:8px 14px;
       border:none;
@@ -90,28 +91,18 @@
       cursor:pointer;
       font-weight:bold;
     }
-    .btn:hover {background:rgba(255,255,255,0.35)}
-    .audio-player {margin-top:20px;text-align:center}
-    .time {margin-top:8px;font-size:14px;color:#bbb}
+    .btn:hover { background:rgba(255,255,255,0.35); }
+    .audio-player { margin-top:20px; text-align:center; }
+    .time { margin-top:8px; font-size:14px; color:#bbb; }
   </style>
 </head>
 <body>
-  <!-- Loading Screen -->
   <div id="loadingScreen">
     <div id="loadingText">LOADING...</div>
   </div>
 
-  <!-- Terminal -->
-  <div id="terminal">
-    <div>Welcome to SynthwaveOS v1.0</div>
-    <div>Type <b>design</b> to access the interior viewer.</div>
-    <div class="input-line">
-      <span class="prompt">&gt;</span>
-      <input type="text" id="commandInput" autofocus />
-    </div>
-  </div>
+  <div id="terminal"></div>
 
-  <!-- Design Page -->
   <div id="designPage">
     <div class="card">
       <div class="hero">
@@ -122,77 +113,113 @@
       </div>
     </div>
 
-    <!-- Audio Player -->
     <div class="audio-player">
       <audio id="radio" controls muted>
-        <source src="https://ice2.somafm.com/spacestation-128-mp3" type="audio/mpeg">
+        <source src="https://ice3.somafm.com/synphaera-128-mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
       </audio>
-      <div class="time" id="timeLeft">Click anywhere to start Space Station Soma 🚀</div>
+      <div class="time" id="timeLeft">Click to start Synphaera Radio</div>
     </div>
   </div>
 
   <script>
+    const loadingScreen = document.getElementById('loadingScreen');
     const terminal = document.getElementById('terminal');
     const designPage = document.getElementById('designPage');
-    const loadingScreen = document.getElementById('loadingScreen');
-    const commandInput = document.getElementById('commandInput');
+    const commandInput = document.createElement('input');
+    commandInput.type = 'text';
+    commandInput.id = 'commandInput';
 
-    const photo = document.getElementById('photo');
-    const newBtn = document.getElementById('newBtn');
-    const radio = document.getElementById('radio');
-    const timeLeft = document.getElementById('timeLeft');
+    // Lines to type in terminal
+    const introLines = [
+      "Welcome to SynthwaveOS v1.0",
+      "Type \"design\" and press Enter to access the interior viewer."
+    ];
 
-    // Show terminal after loading screen
-    setTimeout(()=>{ 
-      loadingScreen.style.display="none"; 
-      terminal.style.display="block"; 
-      commandInput.focus();
-    }, 4000);
+    let termText = "";
 
-    // Terminal command handler
-    commandInput.addEventListener('keydown', (e)=>{
-      if(e.key==="Enter"){
+    function typeWriter(lines, idx = 0, charIdx = 0) {
+      if (idx >= lines.length) {
+        // after typing lines, show prompt
+        termText += "\n> ";
+        terminal.textContent = termText;
+        terminal.appendChild(commandInput);
+        commandInput.focus();
+        return;
+      }
+      const line = lines[idx];
+      if (charIdx < line.length) {
+        termText += line.charAt(charIdx);
+        terminal.textContent = termText;
+        charIdx++;
+        setTimeout(()=> typeWriter(lines, idx, charIdx), 50);
+      } else {
+        termText += "\n";
+        // move to next line
+        setTimeout(()=> typeWriter(lines, idx+1, 0), 300);
+      }
+    }
+
+    function showTerminal() {
+      loadingScreen.style.display = 'none';
+      terminal.style.display = 'block';
+      typeWriter(introLines);
+    }
+
+    // After loading, show terminal
+    setTimeout(showTerminal, 4000);
+
+    // Handle command input
+    commandInput.addEventListener('keydown', (e) => {
+      if (e.key === "Enter") {
         const cmd = commandInput.value.trim().toLowerCase();
-        if(cmd==="design"){
-          terminal.style.display="none";
-          designPage.style.display="flex";
+        if (cmd === "design") {
+          terminal.style.display = 'none';
+          designPage.style.display = 'flex';
           loadRandom();
         } else {
-          const div = document.createElement("div");
-          div.textContent = "Unknown command: "+cmd;
-          terminal.insertBefore(div, terminal.querySelector(".input-line"));
+          // echo unknown
+          termText += cmd + ": command not found\n> ";
+          terminal.textContent = termText;
+          commandInput.value = "";
         }
-        commandInput.value="";
       }
     });
 
     // Image loader
+    const photo = document.getElementById('photo');
+    const newBtn = document.getElementById('newBtn');
     function loadRandom(){
       const url = `https://source.unsplash.com/random/1600x900/?interior,design,cozy&sig=${Date.now()}`;
       photo.src = url;
-      photo.onerror = ()=>{ 
-        photo.src = `https://picsum.photos/1600/900?random=${Date.now()}`; 
+      photo.onerror = ()=> {
+        photo.src = `https://picsum.photos/1600/900?random=${Date.now()}`;
       };
     }
 
     // Music start
+    const radio = document.getElementById('radio');
+    const timeLeft = document.getElementById('timeLeft');
     function startMusic(){
-      if(radio.paused){
+      if (radio.paused) {
         radio.muted = false;
         radio.play().then(()=>{
-          timeLeft.textContent = "Now playing: Space Station Soma 🚀";
-        }).catch(err=>{
+          timeLeft.textContent = "Now playing: Synphaera Radio";
+        }).catch(err => {
           console.log("Play error:", err);
         });
       }
     }
 
-    // Interactions
-    document.body.addEventListener('click', startMusic, { once:true });
-    newBtn.addEventListener('click', ()=>{ loadRandom(); startMusic(); });
-    document.addEventListener('keydown', (e)=>{
-      if(e.key.toLowerCase()==='r'){ loadRandom(); startMusic(); }
+    document.body.addEventListener('click', startMusic, { once: true });
+    newBtn.addEventListener('click', ()=> { loadRandom(); startMusic(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'r') {
+        loadRandom();
+        startMusic();
+      }
     });
   </script>
 </body>
 </html>
+
