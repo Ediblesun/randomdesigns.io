@@ -5,12 +5,36 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Random Aesthetic Interior + Lofi Radio</title>
   <style>
-    body {margin:0;display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#0f1724;font-family:Arial,sans-serif;color:#fff}
-    .card {max-width:90vw;max-height:70vh;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+    body {
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      background:#0f1724;
+      font-family:Arial,sans-serif;
+      color:#fff;
+    }
+    .card {
+      max-width:90vw;
+      max-height:70vh;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    }
     .hero {position:relative;width:100%;height:100%}
     .hero img {width:100%;height:100%;object-fit:cover;display:block}
     .controls {position:absolute;bottom:12px;left:12px;display:flex;gap:10px}
-    .btn {padding:8px 14px;border:none;border-radius:8px;background:rgba(255,255,255,0.2);color:#fff;cursor:pointer;font-weight:bold}
+    .btn {
+      padding:8px 14px;
+      border:none;
+      border-radius:8px;
+      background:rgba(255,255,255,0.2);
+      color:#fff;
+      cursor:pointer;
+      font-weight:bold;
+    }
     .btn:hover {background:rgba(255,255,255,0.35)}
     .audio-player {margin-top:20px;text-align:center}
     .time {margin-top:8px;font-size:14px;color:#bbb}
@@ -28,41 +52,57 @@
 
   <!-- Audio Player -->
   <div class="audio-player">
-    <audio id="radio" controls autoplay>
-      <!-- Example: SomaFM Lofi stream (free, public) -->
+    <audio id="radio" controls>
       <source src="https://ice1.somafm.com/lofi-128-mp3" type="audio/mpeg">
       Your browser does not support the audio element.
     </audio>
-    <div class="time" id="timeLeft">Live stream — no fixed track length</div>
+    <div class="time" id="timeLeft">Click anywhere to start music 🎵</div>
   </div>
 
   <script>
     const photo = document.getElementById('photo');
     const newBtn = document.getElementById('newBtn');
-
-    function loadRandom(){
-      const url = `https://source.unsplash.com/random/1600x900/?interior,design,cozy&sig=${Date.now()}`;
-      photo.src = url;
-      photo.onerror = ()=>{ photo.src = `https://picsum.photos/1600/900?random=${Date.now()}`; };
-    }
-    newBtn.addEventListener('click', loadRandom);
-    document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='r') loadRandom(); });
-    loadRandom();
-
-    // TIMER for regular MP3s (disabled for live stream)
     const radio = document.getElementById('radio');
     const timeLeft = document.getElementById('timeLeft');
 
-    radio.addEventListener('timeupdate', ()=>{
-      if(radio.duration && !isNaN(radio.duration)){
-        const remaining = Math.floor(radio.duration - radio.currentTime);
-        const mins = String(Math.floor(remaining/60)).padStart(2,'0');
-        const secs = String(remaining%60).padStart(2,'0');
-        timeLeft.textContent = `Time left: ${mins}:${secs}`;
-      } else {
-        timeLeft.textContent = `Live stream — no fixed track length`;
+    // Load random background image
+    function loadRandom(){
+      const url = `https://source.unsplash.com/random/1600x900/?interior,design,cozy&sig=${Date.now()}`;
+      photo.src = url;
+      photo.onerror = ()=>{ 
+        photo.src = `https://picsum.photos/1600/900?random=${Date.now()}`; 
+      };
+    }
+
+    // Button & keyboard controls
+    newBtn.addEventListener('click', ()=>{
+      loadRandom();
+      startMusic();
+    });
+    document.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase()==='r'){ 
+        loadRandom(); 
+        startMusic();
       }
     });
+
+    // Start audio on first click anywhere
+    document.body.addEventListener('click', ()=>{
+      startMusic();
+    }, { once: true });
+
+    // Play audio function
+    function startMusic(){
+      if(radio.paused){
+        radio.play().then(()=>{
+          timeLeft.textContent = "Live lofi radio 🎶";
+        }).catch(err=>{
+          console.log("Autoplay blocked:", err);
+        });
+      }
+    }
+
+    loadRandom();
   </script>
 </body>
 </html>
