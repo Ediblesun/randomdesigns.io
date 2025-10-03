@@ -22,7 +22,7 @@
       display:flex;
       justify-content:center;
       align-items:center;
-      background:radial-gradient(circle at bottom, #0f0f1f, #111, #000);
+      background:black;
       color:#33ff33;
       font-size:3em;
       text-shadow:0 0 15px #0f0, 0 0 40px #0f0;
@@ -51,15 +51,13 @@
       white-space: pre-wrap;
       overflow-y:auto;
     }
-    .input-line { display:flex; margin-top:0.2em; }
-    .prompt { margin-right:6px; }
     #commandInput {
       background:none;
       border:none;
       color:#33ff33;
       outline:none;
       font-size:1.1em;
-      flex:1;
+      width:80%;
     }
 
     /* Shared Page Style */
@@ -105,20 +103,6 @@
       margin-bottom:10px;
     }
 
-    /* Calendar Inputs */
-    .calendar-input {
-      display:flex;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .calendar-input input {
-      background:black;
-      border:1px solid #33ff33;
-      color:#33ff33;
-      padding:5px;
-      font-family:'Courier New', monospace;
-    }
-
     /* Design Page */
     #designPage img {
       width:100%;
@@ -162,11 +146,9 @@
   <div id="portalPage" class="retro-page">
     <div class="retro-box">
       <div class="section-title">[ ORGANIZER / CALENDAR ]</div>
-      <div class="calendar-input">
-        <input type="date" id="eventDate">
-        <input type="text" id="eventText" placeholder="Event description">
-        <button class="retro-btn" onclick="addEvent()">Add</button>
-      </div>
+      <input type="date" id="eventDate">
+      <input type="text" id="eventText" placeholder="Event description">
+      <button class="retro-btn" onclick="addEvent()">Add</button>
       <div id="eventList"></div>
       <button class="retro-btn" onclick="backToTerminal()">← Back</button>
     </div>
@@ -214,67 +196,80 @@
     commandInput.id = 'commandInput';
 
     let termText = "";
-    let prompt = "\nSynthOS> ";
+    const prompt = "\nSynthOS> ";
 
-    function showTerminal() {
+    // Show terminal after boot
+    setTimeout(() => {
       loadingScreen.style.display = 'none';
       terminal.style.display = 'block';
-      termText = "Welcome to SynthwaveOS v3.0\nType 'help' for commands.\n";
+      termText = "Welcome to SynthwaveOS v3.1\nType 'help' for commands.\n";
+      refreshTerminal();
+    }, 4000);
+
+    // Refresh terminal display
+    function refreshTerminal() {
       terminal.innerHTML = termText + prompt;
       terminal.appendChild(commandInput);
       commandInput.focus();
+      terminal.scrollTop = terminal.scrollHeight;
     }
-    setTimeout(showTerminal, 4000);
 
-    // Command Handler
+    // Command handling
     commandInput.addEventListener('keydown', (e) => {
       if (e.key === "Enter") {
         const cmd = commandInput.value.trim().toLowerCase();
         termText += prompt + cmd + "\n";
-        handleCommand(cmd);
-        terminal.innerHTML = termText + prompt;
-        terminal.appendChild(commandInput);
+        runCommand(cmd);
         commandInput.value = "";
-        terminal.scrollTop = terminal.scrollHeight;
+        refreshTerminal();
       }
     });
 
-    function handleCommand(cmd){
-      if (cmd === "help") {
-        termText += "Available commands:\n- design\n- portal\n- log\n- nuclear\n- clear\n";
-      } else if (cmd === "design") {
-        terminal.style.display = 'none';
-        designPage.style.display = 'flex';
-        loadRandom();
-      } else if (cmd === "portal") {
-        terminal.style.display = 'none';
-        portalPage.style.display = 'flex';
-        renderEvents();
-      } else if (cmd === "log") {
-        terminal.style.display = 'none';
-        logPage.style.display = 'flex';
-        fetchIP();
-      } else if (cmd === "nuclear") {
-        terminal.style.display = 'none';
-        nuclearPage.style.display = 'flex';
-      } else if (cmd === "clear") {
-        termText = "";
-      } else if (cmd) {
-        termText += cmd + ": command not found\n";
+    function runCommand(cmd){
+      switch(cmd){
+        case "help":
+          termText += "Available commands:\n- design\n- portal\n- log\n- nuclear\n- clear\n";
+          break;
+        case "design":
+          terminal.style.display = 'none';
+          designPage.style.display = 'flex';
+          loadRandom();
+          break;
+        case "portal":
+          terminal.style.display = 'none';
+          portalPage.style.display = 'flex';
+          renderEvents();
+          break;
+        case "log":
+          terminal.style.display = 'none';
+          logPage.style.display = 'flex';
+          fetchIP();
+          break;
+        case "nuclear":
+          terminal.style.display = 'none';
+          nuclearPage.style.display = 'flex';
+          break;
+        case "clear":
+          termText = "";
+          break;
+        case "":
+          break;
+        default:
+          termText += cmd + ": command not found\n";
       }
     }
 
-    // Back function
-    function backToTerminal() {
+    // Back
+    function backToTerminal(){
       designPage.style.display = 'none';
       portalPage.style.display = 'none';
       logPage.style.display = 'none';
       nuclearPage.style.display = 'none';
       terminal.style.display = 'block';
-      commandInput.focus();
+      refreshTerminal();
     }
 
-    // ===== DESIGN PAGE =====
+    // Design Page
     const photo = document.getElementById('photo');
     function loadRandom(){
       const url = `https://source.unsplash.com/random/1600x900/?interior,retro&sig=${Date.now()}`;
@@ -289,13 +284,13 @@
       if (radio.paused) {
         radio.muted = false;
         radio.play().then(()=> timeLeft.textContent = "Now playing: Synphaera Radio")
-          .catch(err => console.log("Play error:", err));
+          .catch(()=>{});
       }
     }
     document.body.addEventListener('click', startMusic, { once: true });
     document.getElementById('newBtn').addEventListener('click', ()=> { loadRandom(); startMusic(); });
 
-    // ===== PORTAL PAGE (Persistent Events) =====
+    // Portal Events (persistent)
     const eventList = document.getElementById('eventList');
     function addEvent(){
       const date = document.getElementById('eventDate').value;
@@ -317,7 +312,7 @@
       });
     }
 
-    // ===== LOG PAGE (Persistent IP Log) =====
+    // Logs (persistent)
     const logList = document.getElementById('logList');
     function fetchIP(){
       fetch('https://api64.ipify.org?format=json')
@@ -339,13 +334,11 @@
       });
     }
 
-    // ===== Nuclear Simulation =====
+    // Nuclear Simulation
     let coreTemp = 300, powerOutput = 500, rodLevel = 50, coolantFlow = 50;
     function updateReactor(){
-      // Physics-ish simulation
       coreTemp += (100-rodLevel)/20 - coolantFlow/25;
-      if (coreTemp < 200) coreTemp = 200;
-      if (coreTemp > 2000) coreTemp = 2000;
+      coreTemp = Math.max(200, Math.min(coreTemp, 2000));
       powerOutput = Math.max(0, Math.floor((100-rodLevel) * (coreTemp/300)));
       document.getElementById("coreTemp").textContent = coreTemp.toFixed(0);
       document.getElementById("powerOutput").textContent = powerOutput;
@@ -353,11 +346,11 @@
       document.getElementById("coolantFlow").textContent = coolantFlow;
     }
     function adjustRods(amount){
-      rodLevel = Math.min(100, Math.max(0, rodLevel+amount));
+      rodLevel = Math.max(0, Math.min(100, rodLevel+amount));
       updateReactor();
     }
     function adjustCoolant(amount){
-      coolantFlow = Math.min(100, Math.max(0, coolantFlow+amount));
+      coolantFlow = Math.max(0, Math.min(100, coolantFlow+amount));
       updateReactor();
     }
     setInterval(updateReactor, 1000);
