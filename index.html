@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Synthwave Terminal → Multi-Portal</title>
+  <title>SynthwaveOS → Retro Terminal</title>
   <style>
     body {
       margin:0;
@@ -22,7 +22,7 @@
       display:flex;
       justify-content:center;
       align-items:center;
-      background:radial-gradient(circle at bottom, #0f0f1f, #222, #000);
+      background:radial-gradient(circle at bottom, #0f0f1f, #111, #000);
       color:#33ff33;
       font-size:3em;
       text-shadow:0 0 15px #0f0, 0 0 40px #0f0;
@@ -42,22 +42,23 @@
     /* Terminal */
     #terminal {
       display:none;
-      padding:20px;
+      padding:15px;
       height:100vh;
       width:100vw;
       background:black;
       color:#33ff33;
-      font-size:1.2em;
+      font-size:1.1em;
       white-space: pre-wrap;
+      overflow-y:auto;
     }
-    .input-line { display:flex; margin-top:1em; }
-    .prompt { margin-right:10px; }
+    .input-line { display:flex; margin-top:0.2em; }
+    .prompt { margin-right:6px; }
     #commandInput {
       background:none;
       border:none;
       color:#33ff33;
       outline:none;
-      font-size:1.2em;
+      font-size:1.1em;
       flex:1;
     }
 
@@ -118,20 +119,21 @@
       font-family:'Courier New', monospace;
     }
 
-    /* Design Page Overrides */
+    /* Design Page */
     #designPage img {
       width:100%;
       max-width:800px;
       border:1px solid #33ff33;
     }
-    #designPage .controls {
-      margin-top:10px;
-    }
+    #designPage .controls { margin-top:10px; }
+
+    /* Nuclear Simulation */
+    #nuclearPage .status { font-family:'Courier New', monospace; }
   </style>
 </head>
 <body>
   <div id="loadingScreen">
-    <div id="loadingText">LOADING...</div>
+    <div id="loadingText">BOOTING...</div>
   </div>
 
   <div id="terminal"></div>
@@ -179,85 +181,101 @@
     </div>
   </div>
 
+  <!-- Nuclear Page -->
+  <div id="nuclearPage" class="retro-page">
+    <div class="retro-box">
+      <div class="section-title">[ NUCLEAR REACTOR SIM ]</div>
+      <div class="status">
+        Core Temp: <span id="coreTemp">300</span>°C<br>
+        Power Output: <span id="powerOutput">500</span> MW<br>
+        Control Rods: <span id="rodLevel">50</span>%<br>
+        Coolant Flow: <span id="coolantFlow">50</span>%
+      </div>
+      <div>
+        <button class="retro-btn" onclick="adjustRods(-10)">Insert Rods</button>
+        <button class="retro-btn" onclick="adjustRods(10)">Withdraw Rods</button>
+        <button class="retro-btn" onclick="adjustCoolant(-10)">Decrease Coolant</button>
+        <button class="retro-btn" onclick="adjustCoolant(10)">Increase Coolant</button>
+      </div>
+      <button class="retro-btn" onclick="backToTerminal()">← Back</button>
+    </div>
+  </div>
+
   <script>
     const loadingScreen = document.getElementById('loadingScreen');
     const terminal = document.getElementById('terminal');
     const designPage = document.getElementById('designPage');
     const portalPage = document.getElementById('portalPage');
     const logPage = document.getElementById('logPage');
+    const nuclearPage = document.getElementById('nuclearPage');
+
     const commandInput = document.createElement('input');
     commandInput.type = 'text';
     commandInput.id = 'commandInput';
 
-    const introLines = [
-      "Welcome to SynthwaveOS v2.0",
-      "Commands available: 'design' 'portal' 'log'",
-      "Type a command and press Enter."
-    ];
-
     let termText = "";
-
-    function typeWriter(lines, idx = 0, charIdx = 0) {
-      if (idx >= lines.length) {
-        termText += "\n> ";
-        terminal.textContent = termText;
-        terminal.appendChild(commandInput);
-        commandInput.focus();
-        return;
-      }
-      const line = lines[idx];
-      if (charIdx < line.length) {
-        termText += line.charAt(charIdx);
-        terminal.textContent = termText;
-        charIdx++;
-        setTimeout(()=> typeWriter(lines, idx, charIdx), 40);
-      } else {
-        termText += "\n";
-        setTimeout(()=> typeWriter(lines, idx+1, 0), 200);
-      }
-    }
+    let prompt = "\nSynthOS> ";
 
     function showTerminal() {
       loadingScreen.style.display = 'none';
       terminal.style.display = 'block';
-      typeWriter(introLines);
+      termText = "Welcome to SynthwaveOS v3.0\nType 'help' for commands.\n";
+      terminal.innerHTML = termText + prompt;
+      terminal.appendChild(commandInput);
+      commandInput.focus();
     }
     setTimeout(showTerminal, 4000);
 
+    // Command Handler
     commandInput.addEventListener('keydown', (e) => {
       if (e.key === "Enter") {
         const cmd = commandInput.value.trim().toLowerCase();
-        if (cmd === "design") {
-          terminal.style.display = 'none';
-          designPage.style.display = 'flex';
-          loadRandom();
-        } else if (cmd === "portal") {
-          terminal.style.display = 'none';
-          portalPage.style.display = 'flex';
-        } else if (cmd === "log") {
-          terminal.style.display = 'none';
-          logPage.style.display = 'flex';
-          fetchIP();
-        } else {
-          termText += cmd + ": command not found\n> ";
-          terminal.textContent = termText;
-          commandInput.value = "";
-        }
+        termText += prompt + cmd + "\n";
+        handleCommand(cmd);
+        terminal.innerHTML = termText + prompt;
+        terminal.appendChild(commandInput);
+        commandInput.value = "";
+        terminal.scrollTop = terminal.scrollHeight;
       }
     });
+
+    function handleCommand(cmd){
+      if (cmd === "help") {
+        termText += "Available commands:\n- design\n- portal\n- log\n- nuclear\n- clear\n";
+      } else if (cmd === "design") {
+        terminal.style.display = 'none';
+        designPage.style.display = 'flex';
+        loadRandom();
+      } else if (cmd === "portal") {
+        terminal.style.display = 'none';
+        portalPage.style.display = 'flex';
+        renderEvents();
+      } else if (cmd === "log") {
+        terminal.style.display = 'none';
+        logPage.style.display = 'flex';
+        fetchIP();
+      } else if (cmd === "nuclear") {
+        terminal.style.display = 'none';
+        nuclearPage.style.display = 'flex';
+      } else if (cmd === "clear") {
+        termText = "";
+      } else if (cmd) {
+        termText += cmd + ": command not found\n";
+      }
+    }
 
     // Back function
     function backToTerminal() {
       designPage.style.display = 'none';
       portalPage.style.display = 'none';
       logPage.style.display = 'none';
+      nuclearPage.style.display = 'none';
       terminal.style.display = 'block';
       commandInput.focus();
     }
 
     // ===== DESIGN PAGE =====
     const photo = document.getElementById('photo');
-    const newBtn = document.getElementById('newBtn');
     function loadRandom(){
       const url = `https://source.unsplash.com/random/1600x900/?interior,retro&sig=${Date.now()}`;
       photo.src = url;
@@ -275,40 +293,74 @@
       }
     }
     document.body.addEventListener('click', startMusic, { once: true });
-    newBtn.addEventListener('click', ()=> { loadRandom(); startMusic(); });
-    document.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'r') { loadRandom(); startMusic(); } });
+    document.getElementById('newBtn').addEventListener('click', ()=> { loadRandom(); startMusic(); });
 
-    // ===== PORTAL PAGE =====
+    // ===== PORTAL PAGE (Persistent Events) =====
     const eventList = document.getElementById('eventList');
     function addEvent(){
       const date = document.getElementById('eventDate').value;
       const text = document.getElementById('eventText').value;
       if (!date || !text) return;
-      const entry = document.createElement('div');
-      entry.textContent = `[${date}] ${text}`;
-      eventList.appendChild(entry);
+      let events = JSON.parse(localStorage.getItem("events")||"[]");
+      events.push({date,text});
+      localStorage.setItem("events",JSON.stringify(events));
+      renderEvents();
       document.getElementById('eventText').value = "";
     }
+    function renderEvents(){
+      eventList.innerHTML = "";
+      let events = JSON.parse(localStorage.getItem("events")||"[]");
+      events.forEach(ev=>{
+        const entry = document.createElement('div');
+        entry.textContent = `[${ev.date}] ${ev.text}`;
+        eventList.appendChild(entry);
+      });
+    }
 
-    // ===== LOG PAGE =====
+    // ===== LOG PAGE (Persistent IP Log) =====
     const logList = document.getElementById('logList');
-    let visitorIPs = [];
     function fetchIP(){
       fetch('https://api64.ipify.org?format=json')
         .then(res => res.json())
         .then(data => {
-          visitorIPs.push(data.ip);
+          let logs = JSON.parse(localStorage.getItem("visitorIPs")||"[]");
+          logs.push(data.ip);
+          localStorage.setItem("visitorIPs", JSON.stringify(logs));
           renderIPs();
         }).catch(()=> logList.textContent = "Unable to fetch IP.");
     }
     function renderIPs(){
       logList.innerHTML = "";
-      visitorIPs.forEach((ip,i)=> {
+      let logs = JSON.parse(localStorage.getItem("visitorIPs")||"[]");
+      logs.forEach((ip,i)=> {
         const line = document.createElement('div');
         line.textContent = `${i+1}. ${ip}`;
         logList.appendChild(line);
       });
     }
+
+    // ===== Nuclear Simulation =====
+    let coreTemp = 300, powerOutput = 500, rodLevel = 50, coolantFlow = 50;
+    function updateReactor(){
+      // Physics-ish simulation
+      coreTemp += (100-rodLevel)/20 - coolantFlow/25;
+      if (coreTemp < 200) coreTemp = 200;
+      if (coreTemp > 2000) coreTemp = 2000;
+      powerOutput = Math.max(0, Math.floor((100-rodLevel) * (coreTemp/300)));
+      document.getElementById("coreTemp").textContent = coreTemp.toFixed(0);
+      document.getElementById("powerOutput").textContent = powerOutput;
+      document.getElementById("rodLevel").textContent = rodLevel;
+      document.getElementById("coolantFlow").textContent = coolantFlow;
+    }
+    function adjustRods(amount){
+      rodLevel = Math.min(100, Math.max(0, rodLevel+amount));
+      updateReactor();
+    }
+    function adjustCoolant(amount){
+      coolantFlow = Math.min(100, Math.max(0, coolantFlow+amount));
+      updateReactor();
+    }
+    setInterval(updateReactor, 1000);
   </script>
 </body>
 </html>
