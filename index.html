@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Synthwave Terminal → Design Viewer</title>
+  <title>Synthwave Terminal → Multi-Portal</title>
   <style>
     body {
       margin:0;
@@ -11,7 +11,7 @@
       background:black;
       font-family: 'Courier New', monospace;
       overflow:hidden;
-      color:#00ffcc;
+      color:#33ff33;
     }
 
     /* Loading Screen */
@@ -22,10 +22,10 @@
       display:flex;
       justify-content:center;
       align-items:center;
-      background:radial-gradient(circle at bottom, #ff0080, #7928ca, #0f0f1f);
-      color:#fff;
+      background:radial-gradient(circle at bottom, #0f0f1f, #222, #000);
+      color:#33ff33;
       font-size:3em;
-      text-shadow:0 0 20px #ff00ff, 0 0 40px #00ffff;
+      text-shadow:0 0 15px #0f0, 0 0 40px #0f0;
       z-index:10;
     }
     #loadingText {
@@ -61,39 +61,72 @@
       flex:1;
     }
 
-    /* Design Page */
-    #designPage {
+    /* Shared Page Style */
+    .retro-page {
       display:none;
       flex-direction:column;
-      justify-content:center;
+      justify-content:flex-start;
       align-items:center;
+      padding:20px;
       height:100vh;
-      background:#0f1724;
-      font-family:Arial,sans-serif;
-      color:#fff;
+      width:100vw;
+      background:black;
+      color:#33ff33;
+      font-size:1.1em;
+      overflow-y:auto;
     }
-    .card {
-      max-width:90vw;
-      max-height:70vh;
-      border-radius:18px;
-      overflow:hidden;
-      box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    .retro-box {
+      border:1px solid #33ff33;
+      padding:15px;
+      margin:10px 0;
+      width:90%;
+      max-width:800px;
+      background:rgba(0,255,0,0.05);
+      border-radius:6px;
     }
-    .hero { position:relative; width:100%; height:100%; }
-    .hero img { width:100%; height:100%; object-fit:cover; display:block; }
-    .controls { position:absolute; bottom:12px; left:12px; display:flex; gap:10px; }
-    .btn {
-      padding:8px 14px;
-      border:none;
-      border-radius:8px;
-      background:rgba(255,255,255,0.2);
-      color:#fff;
+    .retro-btn {
+      background:none;
+      border:1px solid #33ff33;
+      color:#33ff33;
+      padding:6px 12px;
       cursor:pointer;
-      font-weight:bold;
+      font-family:'Courier New', monospace;
+      font-size:1em;
+      margin-top:10px;
     }
-    .btn:hover { background:rgba(255,255,255,0.35); }
-    .audio-player { margin-top:20px; text-align:center; }
-    .time { margin-top:8px; font-size:14px; color:#bbb; }
+    .retro-btn:hover {
+      background:#33ff33;
+      color:black;
+    }
+    .section-title {
+      font-weight:bold;
+      text-decoration:underline;
+      margin-bottom:10px;
+    }
+
+    /* Calendar Inputs */
+    .calendar-input {
+      display:flex;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .calendar-input input {
+      background:black;
+      border:1px solid #33ff33;
+      color:#33ff33;
+      padding:5px;
+      font-family:'Courier New', monospace;
+    }
+
+    /* Design Page Overrides */
+    #designPage img {
+      width:100%;
+      max-width:800px;
+      border:1px solid #33ff33;
+    }
+    #designPage .controls {
+      margin-top:10px;
+    }
   </style>
 </head>
 <body>
@@ -103,22 +136,46 @@
 
   <div id="terminal"></div>
 
-  <div id="designPage">
-    <div class="card">
-      <div class="hero">
-        <img id="photo" alt="A random aesthetically pleasing interior or design photo">
-        <div class="controls">
-          <button class="btn" id="newBtn">⟳ New</button>
-        </div>
+  <!-- Design Page -->
+  <div id="designPage" class="retro-page">
+    <div class="retro-box">
+      <div class="section-title">[ INTERIOR VIEWER ]</div>
+      <img id="photo" alt="Design photo">
+      <div class="controls">
+        <button class="retro-btn" id="newBtn">⟳ New</button>
+        <button class="retro-btn" onclick="backToTerminal()">← Back</button>
       </div>
     </div>
-
-    <div class="audio-player">
+    <div class="retro-box">
+      <div class="section-title">[ SYNTH RADIO ]</div>
       <audio id="radio" controls muted>
         <source src="https://ice3.somafm.com/synphaera-128-mp3" type="audio/mpeg">
         Your browser does not support the audio element.
       </audio>
-      <div class="time" id="timeLeft">Click to start Synphaera Radio</div>
+      <div id="timeLeft">Click to start Synphaera Radio</div>
+    </div>
+  </div>
+
+  <!-- Portal Page -->
+  <div id="portalPage" class="retro-page">
+    <div class="retro-box">
+      <div class="section-title">[ ORGANIZER / CALENDAR ]</div>
+      <div class="calendar-input">
+        <input type="date" id="eventDate">
+        <input type="text" id="eventText" placeholder="Event description">
+        <button class="retro-btn" onclick="addEvent()">Add</button>
+      </div>
+      <div id="eventList"></div>
+      <button class="retro-btn" onclick="backToTerminal()">← Back</button>
+    </div>
+  </div>
+
+  <!-- Log Page -->
+  <div id="logPage" class="retro-page">
+    <div class="retro-box">
+      <div class="section-title">[ VISITOR LOGS ]</div>
+      <div id="logList">Fetching visitor IP...</div>
+      <button class="retro-btn" onclick="backToTerminal()">← Back</button>
     </div>
   </div>
 
@@ -126,21 +183,22 @@
     const loadingScreen = document.getElementById('loadingScreen');
     const terminal = document.getElementById('terminal');
     const designPage = document.getElementById('designPage');
+    const portalPage = document.getElementById('portalPage');
+    const logPage = document.getElementById('logPage');
     const commandInput = document.createElement('input');
     commandInput.type = 'text';
     commandInput.id = 'commandInput';
 
-    // Lines to type in terminal
     const introLines = [
-      "Welcome to SynthwaveOS v1.0",
-      "Type \"design\" and press Enter to access the interior viewer."
+      "Welcome to SynthwaveOS v2.0",
+      "Commands available: 'design' 'portal' 'log'",
+      "Type a command and press Enter."
     ];
 
     let termText = "";
 
     function typeWriter(lines, idx = 0, charIdx = 0) {
       if (idx >= lines.length) {
-        // after typing lines, show prompt
         termText += "\n> ";
         terminal.textContent = termText;
         terminal.appendChild(commandInput);
@@ -152,11 +210,10 @@
         termText += line.charAt(charIdx);
         terminal.textContent = termText;
         charIdx++;
-        setTimeout(()=> typeWriter(lines, idx, charIdx), 50);
+        setTimeout(()=> typeWriter(lines, idx, charIdx), 40);
       } else {
         termText += "\n";
-        // move to next line
-        setTimeout(()=> typeWriter(lines, idx+1, 0), 300);
+        setTimeout(()=> typeWriter(lines, idx+1, 0), 200);
       }
     }
 
@@ -165,11 +222,8 @@
       terminal.style.display = 'block';
       typeWriter(introLines);
     }
-
-    // After loading, show terminal
     setTimeout(showTerminal, 4000);
 
-    // Handle command input
     commandInput.addEventListener('keydown', (e) => {
       if (e.key === "Enter") {
         const cmd = commandInput.value.trim().toLowerCase();
@@ -177,8 +231,14 @@
           terminal.style.display = 'none';
           designPage.style.display = 'flex';
           loadRandom();
+        } else if (cmd === "portal") {
+          terminal.style.display = 'none';
+          portalPage.style.display = 'flex';
+        } else if (cmd === "log") {
+          terminal.style.display = 'none';
+          logPage.style.display = 'flex';
+          fetchIP();
         } else {
-          // echo unknown
           termText += cmd + ": command not found\n> ";
           terminal.textContent = termText;
           commandInput.value = "";
@@ -186,40 +246,69 @@
       }
     });
 
-    // Image loader
+    // Back function
+    function backToTerminal() {
+      designPage.style.display = 'none';
+      portalPage.style.display = 'none';
+      logPage.style.display = 'none';
+      terminal.style.display = 'block';
+      commandInput.focus();
+    }
+
+    // ===== DESIGN PAGE =====
     const photo = document.getElementById('photo');
     const newBtn = document.getElementById('newBtn');
     function loadRandom(){
-      const url = `https://source.unsplash.com/random/1600x900/?interior,design,cozy&sig=${Date.now()}`;
+      const url = `https://source.unsplash.com/random/1600x900/?interior,retro&sig=${Date.now()}`;
       photo.src = url;
       photo.onerror = ()=> {
         photo.src = `https://picsum.photos/1600/900?random=${Date.now()}`;
       };
     }
-
-    // Music start
     const radio = document.getElementById('radio');
     const timeLeft = document.getElementById('timeLeft');
     function startMusic(){
       if (radio.paused) {
         radio.muted = false;
-        radio.play().then(()=>{
-          timeLeft.textContent = "Now playing: Synphaera Radio";
-        }).catch(err => {
-          console.log("Play error:", err);
-        });
+        radio.play().then(()=> timeLeft.textContent = "Now playing: Synphaera Radio")
+          .catch(err => console.log("Play error:", err));
       }
     }
-
     document.body.addEventListener('click', startMusic, { once: true });
     newBtn.addEventListener('click', ()=> { loadRandom(); startMusic(); });
-    document.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'r') {
-        loadRandom();
-        startMusic();
-      }
-    });
+    document.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'r') { loadRandom(); startMusic(); } });
+
+    // ===== PORTAL PAGE =====
+    const eventList = document.getElementById('eventList');
+    function addEvent(){
+      const date = document.getElementById('eventDate').value;
+      const text = document.getElementById('eventText').value;
+      if (!date || !text) return;
+      const entry = document.createElement('div');
+      entry.textContent = `[${date}] ${text}`;
+      eventList.appendChild(entry);
+      document.getElementById('eventText').value = "";
+    }
+
+    // ===== LOG PAGE =====
+    const logList = document.getElementById('logList');
+    let visitorIPs = [];
+    function fetchIP(){
+      fetch('https://api64.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => {
+          visitorIPs.push(data.ip);
+          renderIPs();
+        }).catch(()=> logList.textContent = "Unable to fetch IP.");
+    }
+    function renderIPs(){
+      logList.innerHTML = "";
+      visitorIPs.forEach((ip,i)=> {
+        const line = document.createElement('div');
+        line.textContent = `${i+1}. ${ip}`;
+        logList.appendChild(line);
+      });
+    }
   </script>
 </body>
 </html>
-
