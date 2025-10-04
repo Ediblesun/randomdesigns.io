@@ -356,43 +356,69 @@
     }
 
     /* Solar System */
-    let solarAnim;
-    function startSolar(){
-      const canvas = document.getElementById('solarCanvas');
-      const ctx = canvas.getContext('2d');
-      let t=0;
-      if(solarAnim) cancelAnimationFrame(solarAnim);
-      function draw(){
-        ctx.clearRect(0,0,600,600);
-        ctx.fillStyle="yellow";
-        ctx.beginPath();
-        ctx.arc(300,300,20,0,Math.PI*2);
-        ctx.fill();
-        // planets
-        const planets=[
-          {r:50,speed:0.04,color:"grey"},
-          {r:90,speed:0.03,color:"orange"},
-          {r:130,speed:0.02,color:"blue"},
-          {r:170,speed:0.015,color:"red"},
-        ];
-        planets.forEach((p,i)=>{
-          let angle=t*p.speed;
-          let x=300+Math.cos(angle)*p.r;
-          let y=300+Math.sin(angle)*p.r;
-          ctx.strokeStyle="rgba(255,255,255,0.2)";
-          ctx.beginPath();
-          ctx.arc(300,300,p.r,0,Math.PI*2);
-          ctx.stroke();
-          ctx.fillStyle=p.color;
-          ctx.beginPath();
-          ctx.arc(x,y,8,0,Math.PI*2);
-          ctx.fill();
-        });
-        t+=1;
-        solarAnim=requestAnimationFrame(draw);
-      }
-      draw();
+let solarAnim, fastForward = false;
+function startSolar(){
+  const canvas = document.getElementById('solarCanvas');
+  const ctx = canvas.getContext('2d');
+  let cx=300, cy=300;
+
+  // Planet data (AU scaled → pixels, approx)
+  const planets = [
+    {name:"Mercury", r:60, period:88, color:"grey"},
+    {name:"Venus",   r:100, period:225, color:"orange"},
+    {name:"Earth",   r:140, period:365, color:"blue"},
+    {name:"Mars",    r:180, period:687, color:"red"},
+    {name:"Jupiter", r:240, period:4333, color:"tan"},
+    {name:"Saturn",  r:300, period:10759, color:"goldenrod"},
+    {name:"Uranus",  r:360, period:30687, color:"lightblue"},
+    {name:"Neptune", r:420, period:60190, color:"purple"}
+  ];
+
+  if(solarAnim) cancelAnimationFrame(solarAnim);
+
+  function draw(){
+    ctx.clearRect(0,0,600,600);
+    // draw sun
+    ctx.fillStyle="yellow";
+    ctx.beginPath();
+    ctx.arc(cx,cy,20,0,Math.PI*2);
+    ctx.fill();
+
+    const now = new Date();
+    const daysSinceEpoch = (now - new Date("2000-01-01")) / (1000*60*60*24);
+    let multiplier = fastForward ? 1000 : 1;
+
+    planets.forEach(p=>{
+      // orbit angle
+      let angle = 2*Math.PI * (daysSinceEpoch * multiplier / p.period);
+      let x = cx + Math.cos(angle)*p.r;
+      let y = cy + Math.sin(angle)*p.r;
+
+      // orbit path
+      ctx.strokeStyle="rgba(255,255,255,0.2)";
+      ctx.beginPath();
+      ctx.arc(cx,cy,p.r,0,Math.PI*2);
+      ctx.stroke();
+
+      // planet
+      ctx.fillStyle=p.color;
+      ctx.beginPath();
+      ctx.arc(x,y,6,0,Math.PI*2);
+      ctx.fill();
+    });
+
+    solarAnim=requestAnimationFrame(draw);
+  }
+  draw();
+
+  // toggle fast forward
+  document.addEventListener('keydown',(e)=>{
+    if(e.key.toLowerCase()==='f'){
+      fastForward=!fastForward;
     }
+  });
+}
+
   </script>
 </body>
 </html>
