@@ -1,619 +1,398 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SynthwaveOS / Industrial — Multi-Portal (v5)</title>
-<style>
-/* ---------- Theme variables ---------- */
-:root{
-  --bg: #000;
-  --accent: #33ff33;
-  --muted: #0f0f0f;
-  --panel-bg: rgba(0,255,0,0.04);
-  --btn-bg: transparent;
-  --btn-border: #33ff33;
-  --text: #33ff33;
-  --danger: #ff3333;
-  --glass: rgba(255,255,255,0.02);
-}
-body.industrial {
-  --bg: #0b0b0b; --accent:#ff9933; --btn-border:#ff9933; --text:#ff9933;
-  background:linear-gradient(180deg,#08090a 0%, #101214 100%);
-}
-body.synthwave {
-  --bg:#000; --accent:#33ff33; --btn-border:#33ff33; --text:#33ff33;
-  background:radial-gradient(circle at bottom,#090013 0%, #020202 65%);
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:"Courier New",monospace;background:var(--bg);color:var(--text)}
-/* evolve overlay */
-#evolveOverlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;flex-direction:column;color:var(--text);background:linear-gradient(180deg,rgba(0,0,0,0.8),rgba(0,0,0,0.95))}
-.evolve-box{width:min(92vw,900px);padding:20px;border-radius:8px;border:1px dashed var(--btn-border);text-align:center}
-.progress{height:18px;width:100%;background:rgba(255,255,255,0.03);border-radius:6px;overflow:hidden;margin-top:12px}
-.progress>.bar{height:100%;width:0%;background:linear-gradient(90deg,var(--btn-border),var(--accent));transition:width 0.2s linear}
-.gear{width:56px;height:56px;animation:spin 4s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Retro Terminal OS</title>
+  <style>
+    body {
+      margin:0;
+      height:100vh;
+      background:black;
+      font-family: 'Courier New', monospace;
+      overflow:hidden;
+      color:#33ff33;
+      transition: background 1s, color 1s;
+    }
 
-/* terminal */
-#terminal{display:none;padding:16px;height:100vh;overflow:auto;font-size:1rem}
-.term-line{white-space:pre-wrap;margin:0 0 6px 0}
-.prompt-line{display:flex;gap:8px;align-items:center;margin-top:6px}
-.prompt-label{min-width:110px;color:var(--btn-border)}
-#commandInput{background:transparent;border:none;outline:none;color:var(--text);width:100%;font-family:inherit;font-size:inherit}
+    /* THEMES */
+    body.synthwave {
+      background:black;
+      color:#33ff33;
+    }
+    body.industrial {
+      background:#111 url('https://www.transparenttextures.com/patterns/dark-matter.png');
+      color:#ff9933;
+    }
 
-/* pages */
-.page{display:none;height:100vh;overflow:auto;padding:20px}
-.panel{max-width:1060px;margin:20px auto;border-radius:10px;padding:16px;border:1px solid rgba(255,255,255,0.03);background:var(--panel-bg)}
-.controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
-.btn{background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-border);padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold}
-.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
-#photo{width:100%;max-height:60vh;object-fit:cover;border-radius:6px}
+    /* Terminal */
+    #terminal {
+      display:none;
+      padding:20px;
+      height:100vh;
+      width:100vw;
+      font-size:1.2em;
+      white-space: pre-wrap;
+      overflow-y:auto;
+    }
+    .input-line { display:flex; margin-top:0.2em; }
+    .prompt { margin-right:10px; }
+    #commandInput {
+      background:none;
+      border:none;
+      color:inherit;
+      outline:none;
+      font-size:1.2em;
+      flex:1;
+    }
 
-/* portal/calendar */
-.calendar-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.calendar-row input[type="date"],.calendar-row input[type="text"]{background:transparent;color:var(--text);border:1px solid var(--btn-border);padding:7px 8px;border-radius:6px}
-.event-item{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
-.event-controls button{margin-left:6px}
+    /* Pages */
+    .page {
+      display:none;
+      height:100vh;
+      width:100vw;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      font-size:1.2em;
+    }
+    .backBtn {
+      margin-top:20px;
+      padding:6px 12px;
+      border:none;
+      cursor:pointer;
+      font-weight:bold;
+      background:rgba(255,255,255,0.2);
+      color:inherit;
+    }
+    .backBtn:hover { background:rgba(255,255,255,0.4); }
 
-/* nuclear */
-#nuclearTop{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
-#reactorSVG{width:360px;height:360px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent}
-.reactor-stats{min-width:260px;padding:8px;border-left:1px dashed rgba(255,255,255,0.03)}
-.pulse{animation:pulse 1s infinite ease-in-out}
-@keyframes pulse{0%{opacity:0.5}50%{opacity:1}100%{opacity:0.5}}
+    /* Design Page */
+    #designPage img { 
+      max-width:80vw; 
+      max-height:60vh; 
+      border:3px solid currentColor;
+    }
 
-#meltdownOverlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(64,0,0,0.85),rgba(0,0,0,0.95));display:none;align-items:center;justify-content:center;z-index:99999;color:yellow;flex-direction:column}
-.meltdownBox{padding:24px;border-radius:12px;border:2px solid #ff4d1a;background:rgba(0,0,0,0.45);text-align:center}
-.meltdownBox h1{color:var(--danger);font-size:2rem;margin:0 0 8px}
+    /* Nuclear schematic */
+    #reactorCanvas {
+      background:#000;
+      border:2px solid currentColor;
+    }
 
-/* responsive */
-@media (max-width:900px){.prompt-label{min-width:80px}.panel{margin:10px}.reactor-stats{min-width:200px}}
-</style>
+    /* Solar system */
+    #solarCanvas {
+      background:#000;
+      border:2px solid currentColor;
+    }
+
+    /* Music */
+    .music-options button {
+      display:block;
+      margin:8px;
+      padding:8px 14px;
+      background:rgba(255,255,255,0.2);
+      color:inherit;
+      border:none;
+      cursor:pointer;
+    }
+    .music-options button:hover {
+      background:rgba(255,255,255,0.4);
+    }
+
+    /* Loading Overlay for evolve */
+    #loadingOverlay {
+      display:none;
+      position:absolute;
+      top:0; left:0;
+      width:100vw; height:100vh;
+      background:black;
+      justify-content:center;
+      align-items:center;
+      color:#ff9933;
+      font-size:2em;
+      flex-direction:column;
+      z-index:100;
+    }
+    .bar { 
+      width:300px; height:25px; 
+      border:1px solid currentColor; 
+      margin-top:20px;
+      position:relative;
+      overflow:hidden;
+    }
+    .fill {
+      height:100%; width:0;
+      background:currentColor;
+      animation: fillBar 4s forwards;
+    }
+    @keyframes fillBar {
+      to { width:100%; }
+    }
+  </style>
 </head>
 <body class="synthwave">
-<!-- Evolve overlay -->
-<div id="evolveOverlay" role="status" aria-live="polite">
-  <div class="evolve-box">
-    <svg class="gear" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M50 20 L58 24 L68 24 L72 16 L80 20 L88 26 L86 36 L92 46 L88 56 L80 60 L76 68 L68 72 L60 76 L50 80 L40 76 L32 72 L24 68 L20 60 L12 56 L8 46 L14 36 L12 26 L20 20 L28 16 L32 24 L42 24 Z"/><circle cx="50" cy="50" r="12" fill="currentColor"/></g></svg>
-    <div id="evolveText" style="font-weight:bold">SYSTEM EVOLVING — Initializing industrial protocol</div>
-    <div class="progress"><div class="bar" id="evolveBar"></div></div>
-    <div style="margin-top:10px;font-size:0.9rem;color:rgba(255,255,255,0.6)" id="evolveSub">Preparing assets...</div>
-  </div>
-</div>
+  <div id="terminal"></div>
 
-<!-- Meltdown overlay -->
-<div id="meltdownOverlay">
-  <div class="meltdownBox">
-    <h1>MELTDOWN</h1>
-    <p id="meltdownMsg">Core integrity lost — Emergency containment failed.</p>
-    <div style="margin-top:12px"><button class="btn" id="resetReactorBtn">Reset Simulation</button></div>
-  </div>
-</div>
-
-<!-- Terminal -->
-<div id="terminal" aria-label="terminal"></div>
-
-<!-- DESIGN -->
-<div id="designPage" class="page">
-  <div class="panel">
-    <div style="font-weight:bold;margin-bottom:8px">[ INTERIOR — Design Viewer ]</div>
+  <!-- Pages -->
+  <div id="designPage" class="page">
     <img id="photo" alt="Design photo">
-    <div class="controls">
-      <button class="btn" id="newBtn">⟳ New</button>
-      <button class="btn" onclick="backToTerminal()">← Back</button>
+    <button class="backBtn" onclick="returnToTerminal()">← Back</button>
+  </div>
+
+  <div id="portalPage" class="page">
+    <h2>Calendar & Reminders</h2>
+    <textarea id="calendar" style="width:60vw;height:50vh;"></textarea>
+    <button class="backBtn" onclick="returnToTerminal()">← Back</button>
+  </div>
+
+  <div id="logPage" class="page">
+    <h2>Visitor Log (IPs)</h2>
+    <pre id="logOutput"></pre>
+    <button class="backBtn" onclick="returnToTerminal()">← Back</button>
+  </div>
+
+  <div id="nuclearPage" class="page">
+    <h2>Nuclear Reactor Simulation</h2>
+    <canvas id="reactorCanvas" width="500" height="500"></canvas>
+    <pre id="reactorStats"></pre>
+    <button class="backBtn" onclick="returnToTerminal()">← Back</button>
+  </div>
+
+  <div id="solarPage" class="page">
+    <h2>Solar System Simulation</h2>
+    <canvas id="solarCanvas" width="600" height="600"></canvas>
+    <button class="backBtn" onclick="returnToTerminal()">← Back</button>
+  </div>
+
+  <div id="musicPage" class="page">
+    <h2>Music Player</h2>
+    <div class="music-options">
+      <button onclick="playMusic('https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1')">Lofi Girl</button>
+      <button onclick="playMusic('https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1')">Chillhop</button>
+      <button onclick="playMusic('https://www.youtube.com/embed/7NOSDKb0HlU?autoplay=1')">College Radio</button>
     </div>
-    <div style="margin-top:10px;color:rgba(255,255,255,0.6);font-size:0.9rem">Tip: press 'r' to reload images.</div>
+    <iframe id="musicFrame" width="560" height="315" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <button class="backBtn" onclick="returnToTerminal()">← Back</button>
   </div>
-</div>
 
-<!-- PORTAL -->
-<div id="portalPage" class="page">
-  <div class="panel">
-    <div style="font-weight:bold;margin-bottom:10px">[ ORGANIZER / CALENDAR ]</div>
-    <div class="calendar-row">
-      <input id="eventDate" type="datetime-local">
-      <input id="eventText" type="text" placeholder="Event description...">
-      <button class="btn" id="addEventBtn">Add</button>
-    </div>
-    <div id="eventList" style="max-height:45vh;overflow:auto"></div>
-    <div class="controls"><button class="btn" onclick="backToTerminal()">← Back</button></div>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div>[▓▓░░░░░░░░] EVOLVING...</div>
+    <div class="bar"><div class="fill"></div></div>
   </div>
-</div>
 
-<!-- LOG -->
-<div id="logPage" class="page">
-  <div class="panel">
-    <div style="font-weight:bold;margin-bottom:10px">[ VISITOR LOGS ]</div>
-    <div id="logList">Fetching visitor IP...</div>
-    <div style="margin-top:10px;color:rgba(255,255,255,0.6);font-size:0.9rem">If a server is available, this list syncs to it. Otherwise it is local only.</div>
-    <div class="controls"><button class="btn" onclick="backToTerminal()">← Back</button></div>
-  </div>
-</div>
+  <script>
+    const terminal = document.getElementById('terminal');
+    const pages = {
+      design: document.getElementById('designPage'),
+      portal: document.getElementById('portalPage'),
+      log: document.getElementById('logPage'),
+      nuclear: document.getElementById('nuclearPage'),
+      solar: document.getElementById('solarPage'),
+      music: document.getElementById('musicPage')
+    };
+    let termText = "";
+    const commandInput = document.createElement('input');
+    commandInput.type = 'text';
+    commandInput.id = 'commandInput';
 
-<!-- NUCLEAR -->
-<div id="nuclearPage" class="page">
-  <div class="panel">
-    <div style="font-weight:bold;margin-bottom:12px">[ NUCLEAR REACTOR SIM — Advanced ]</div>
-    <div id="nuclearTop">
-      <svg id="reactorSVG" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="glow"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
-        <path id="coolantPath" d="M40 180 C90 100 270 100 320 180" stroke="#88ccff" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.6"/>
-        <path id="coolantPulse" d="M40 180 C90 100 270 100 320 180" stroke="#bbf" stroke-width="6" fill="none" stroke-linecap="round" opacity="0"/>
-        <circle cx="180" cy="190" r="110" stroke="rgba(255,255,255,0.06)" stroke-width="8" fill="rgba(0,0,0,0.15)"/>
-        <g id="coreGroup" transform="translate(180,190)">
-          <circle id="coreGlow" r="60" fill="#66f" filter="url(#glow)" opacity="0.9"/>
-          <circle id="coreSolid" r="46" fill="#66f"/>
-        </g>
-        <g id="rods" fill="#222">
-          <rect id="rod1" x="156" y="80" width="12" height="80" rx="3" fill="#333"/>
-          <rect id="rod2" x="182" y="80" width="12" height="80" rx="3" fill="#333"/>
-          <rect id="rod3" x="208" y="80" width="12" height="80" rx="3" fill="#333"/>
-          <rect id="rod4" x="234" y="80" width="12" height="80" rx="3" fill="#333"/>
-          <rect id="rodTip1" x="156" y="160" width="12" height="40" fill="#111"/>
-          <rect id="rodTip2" x="182" y="160" width="12" height="40" fill="#111"/>
-          <rect id="rodTip3" x="208" y="160" width="12" height="40" fill="#111"/>
-          <rect id="rodTip4" x="234" y="160" width="12" height="40" fill="#111"/>
-        </g>
-      </svg>
+    const introLines = [
+      "Retro Terminal OS v2.0",
+      "Type 'help' for a list of commands."
+    ];
 
-      <div class="reactor-stats">
-        <div style="margin-bottom:8px">Core Temp: <span id="coreTemp">300</span>°C</div>
-        <div style="margin-bottom:8px">Power Output: <span id="powerOutput">500</span> MW</div>
-        <div style="margin-bottom:8px">Reactivity (ρ): <span id="reactivity">0.00</span></div>
-        <div style="margin-bottom:8px">Control Rods: <span id="rodLevel">50</span>%</div>
-        <div style="margin-bottom:8px">Coolant Flow: <span id="coolantFlow">50</span>%</div>
-
-        <div class="controls" style="margin-top:12px">
-          <button class="btn" onclick="adjustRods(10)">Withdraw Rods</button>
-          <button class="btn" onclick="adjustRods(-10)">Insert Rods</button>
-          <button class="btn" onclick="adjustCoolant(10)">Increase Coolant</button>
-          <button class="btn" onclick="adjustCoolant(-10)">Decrease Coolant</button>
-        </div>
-
-        <div style="margin-top:12px;color:rgba(255,255,255,0.6);font-size:0.9rem">Advanced model includes reactivity & delayed return. If core exceeds safe threshold the sim will attempt SCRAM; prolonged high temperature leads to MELTDOWN.</div>
-
-        <div class="controls" style="margin-top:14px"><button class="btn" onclick="backToTerminal()">← Back</button></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-/* -----------------------------
-   App-wide state and utilities
-   ----------------------------- */
-const serverBase = ''; // set to full URL of server if available, e.g. 'https://myserver.example.com'
-/* If you host the optional Node server below at the same origin, leave as ''.
-   If hosted remotely, set serverBase = 'https://yourserver.com' */
-
-// DOM refs
-const terminal = document.getElementById('terminal');
-const evolveOverlay = document.getElementById('evolveOverlay');
-const evolveBar = document.getElementById('evolveBar');
-const evolveSub = document.getElementById('evolveSub');
-const meltdownOverlay = document.getElementById('meltdownOverlay');
-const meltdownMsg = document.getElementById('meltdownMsg');
-const resetReactorBtn = document.getElementById('resetReactorBtn');
-
-const designPage = document.getElementById('designPage');
-const portalPage = document.getElementById('portalPage');
-const logPage = document.getElementById('logPage');
-const nuclearPage = document.getElementById('nuclearPage');
-
-const commandInput = document.createElement('input');
-commandInput.id='commandInput';commandInput.autocomplete='off';commandInput.spellcheck=false;
-
-let termContent = '';
-const shellPrompt = "SynthOS> ";
-let theme = localStorage.getItem('synth_theme') || 'synthwave';
-document.body.classList.remove('synthwave','industrial');
-document.body.classList.add(theme);
-
-/* ---------- Terminal rendering ---------- */
-function renderTerminal(){
-  terminal.innerHTML = '';
-  const pre = document.createElement('div'); pre.className='term-line'; pre.textContent = termContent;
-  terminal.appendChild(pre);
-  const promptLine = document.createElement('div'); promptLine.className='prompt-line';
-  const label = document.createElement('div'); label.className='prompt-label'; label.textContent = shellPrompt;
-  promptLine.appendChild(label);
-  promptLine.appendChild(commandInput);
-  terminal.appendChild(promptLine);
-  commandInput.focus();
-  terminal.scrollTop = terminal.scrollHeight;
-}
-
-/* ---------- Command history ---------- */
-let commandHistory = JSON.parse(localStorage.getItem('commandHistory')||'[]');
-let historyIndex = commandHistory.length;
-commandInput.addEventListener('keydown', (e)=>{
-  if (e.key === 'Enter'){
-    const raw = commandInput.value;
-    const cmd = raw.trim();
-    if (cmd.length>0){
-      commandHistory.push(cmd); localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
+    function showTerminal() {
+      terminal.style.display = 'block';
+      typeWriter(introLines);
     }
-    historyIndex = commandHistory.length;
-    termContent += shellPrompt + raw + "\n";
-    handleCommand(cmd.toLowerCase());
-    commandInput.value = '';
-    renderTerminal();
-  } else if (e.key === 'ArrowUp'){
-    if (historyIndex > 0) historyIndex--;
-    commandInput.value = commandHistory[historyIndex] || '';
-    e.preventDefault();
-  } else if (e.key === 'ArrowDown'){
-    if (historyIndex < commandHistory.length - 1) historyIndex++;
-    else { historyIndex = commandHistory.length; commandInput.value = ''; }
-    commandInput.value = commandHistory[historyIndex] || '';
-    e.preventDefault();
-  }
-});
 
-/* ---------- Page helpers ---------- */
-function hideAllPages(){ [designPage,portalPage,logPage,nuclearPage].forEach(p=>p.style.display='none'); }
-function backToTerminal(){ hideAllPages(); terminal.style.display='block'; renderTerminal(); }
-
-/* ---------- Events (calendar) with edit/delete & notifications ---------- */
-function loadEvents(){ return JSON.parse(localStorage.getItem('events')||'[]'); }
-function saveEvents(arr){ localStorage.setItem('events', JSON.stringify(arr)); schedulePendingNotifications(); renderEvents(); }
-function renderEvents(){
-  const container = document.getElementById('eventList'); container.innerHTML='';
-  const events = loadEvents().sort((a,b)=> new Date(a.when) - new Date(b.when));
-  if (!events.length){ container.textContent = "No events."; return; }
-  events.forEach((ev, idx)=>{
-    const row = document.createElement('div'); row.className='event-item';
-    const left = document.createElement('div'); left.textContent = `[${(new Date(ev.when)).toLocaleString()}] ${ev.title}`;
-    const controls = document.createElement('div'); controls.className='event-controls';
-    const edit = document.createElement('button'); edit.className='btn'; edit.textContent='Edit';
-    const del = document.createElement('button'); del.className='btn'; del.textContent='Delete';
-    edit.onclick = ()=> editEvent(idx);
-    del.onclick = ()=> { if(confirm('Delete event?')) { let arr=loadEvents(); arr.splice(idx,1); saveEvents(arr); } };
-    controls.appendChild(edit); controls.appendChild(del);
-    row.appendChild(left); row.appendChild(controls);
-    container.appendChild(row);
-  });
-}
-function addEventFromInputs(){
-  const when = document.getElementById('eventDate').value;
-  const title = document.getElementById('eventText').value.trim();
-  if (!when || !title) return;
-  const arr = loadEvents(); arr.push({when,title,id:Date.now()}); saveEvents(arr);
-  document.getElementById('eventText').value='';
-}
-document.getElementById('addEventBtn').addEventListener('click', addEventFromInputs);
-
-function editEvent(index){
-  const arr = loadEvents(); const ev = arr[index];
-  const newTitle = prompt('Edit event text', ev.title);
-  if (newTitle === null) return;
-  const newWhen = prompt('Edit date/time (YYYY-MM-DDTHH:MM)', ev.when);
-  if (!newWhen) return;
-  ev.title = newTitle; ev.when = newWhen;
-  saveEvents(arr);
-}
-
-/* Notifications: request permission and schedule upcoming events while page is open */
-let scheduledTimeouts = [];
-function clearScheduledNotifications(){ scheduledTimeouts.forEach(t=>clearTimeout(t)); scheduledTimeouts=[]; }
-function schedulePendingNotifications(){
-  clearScheduledNotifications();
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-  const arr = loadEvents();
-  const now = Date.now();
-  arr.forEach(ev=>{
-    const when = new Date(ev.when).getTime();
-    const delta = when - now;
-    if (delta > 0 && delta < 1000 * 60 * 60 * 24 * 7){ // schedule up to 7 days ahead in-page
-      const t = setTimeout(()=> {
-        new Notification('Event Reminder', {body: ev.title + ' — ' + new Date(ev.when).toLocaleString()});
-      }, delta);
-      scheduledTimeouts.push(t);
+    function typeWriter(lines, idx = 0, charIdx = 0) {
+      if (idx >= lines.length) {
+        termText += "\n> ";
+        terminal.textContent = termText;
+        terminal.appendChild(commandInput);
+        commandInput.focus();
+        return;
+      }
+      const line = lines[idx];
+      if (charIdx < line.length) {
+        termText += line.charAt(charIdx);
+        terminal.textContent = termText;
+        charIdx++;
+        setTimeout(()=> typeWriter(lines, idx, charIdx), 40);
+      } else {
+        termText += "\n";
+        setTimeout(()=> typeWriter(lines, idx+1, 0), 200);
+      }
     }
-  });
-}
-/* ask for permission proactively when user opens portal */
-function requestNotificationPermission(){ if (!('Notification' in window)) return; if (Notification.permission === 'default') Notification.requestPermission().then(p=>{ if (p === 'granted') schedulePendingNotifications(); }); }
+    showTerminal();
 
-/* ---------- Visitor log: server-backed fallback to localStorage ---------- */
-function loadVisitorIPs(){ return JSON.parse(localStorage.getItem('visitorIPs')||'[]'); }
-function saveVisitorIPs(arr){ localStorage.setItem('visitorIPs', JSON.stringify(arr)); }
-function renderIPs(){
-  const node = document.getElementById('logList'); node.innerHTML='';
-  const ips = loadVisitorIPs();
-  if (!ips.length) node.textContent = "No visitor IPs recorded.";
-  else ips.forEach((ip,i)=>{ const d=document.createElement('div'); d.textContent = `${i+1}. ${ip}`; node.appendChild(d); });
-}
-function appendVisitor(ip){
-  const ips = loadVisitorIPs(); ips.push(ip); saveVisitorIPs(ips); renderIPs();
-  // attempt to POST to server if available
-  if (!serverBase) return; // if no server, skip
-  fetch(serverBase + '/api/visits', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip,ts:Date.now()})})
-    .then(r=>r.ok? r.json(): Promise.reject()).then(j=>{
-      // optionally replace local list with canonical list from server
-      if (Array.isArray(j.visits)) { localStorage.setItem('visitorIPs', JSON.stringify(j.visits)); renderIPs(); }
-    }).catch(()=>{/* ignore: offline or CORS */});
-}
-
-/* try to discover user's IP and store */
-function fetchIPandStore(){
-  fetch('https://api64.ipify.org?format=json').then(r=>r.json()).then(obj=>{
-    if (obj && obj.ip){ appendVisitor(obj.ip); }
-  }).catch(()=> {
-    // fallback: stamp local pseudo-ip with timestamp so log shows activity
-    appendVisitor('local:'+new Date().toISOString());
-  });
-}
-
-/* optional: if server available, fetch canonical list */
-function fetchServerLogs(){
-  if (!serverBase) return;
-  fetch(serverBase + '/api/visits').then(r=>r.json()).then(j=>{
-    if (Array.isArray(j.visits)){ saveVisitorIPs(j.visits); renderIPs(); }
-  }).catch(()=>{});
-}
-
-/* ---------- Design image loader ---------- */
-const photo = document.getElementById('photo');
-function loadRandomImage(){ photo.src = `https://source.unsplash.com/random/1600x900/?interior,design&sig=${Date.now()}`; photo.onerror = ()=> { photo.src = `https://picsum.photos/1600/900?random=${Date.now()}`; } }
-document.getElementById('newBtn').addEventListener('click', ()=> loadRandomImage());
-document.addEventListener('keydown', e=> { if (e.key.toLowerCase()==='r') loadRandomImage(); });
-
-/* ---------- Theme toggling & evolve overlay ---------- */
-function setTheme(t){ document.body.classList.remove('synthwave','industrial'); document.body.classList.add(t); localStorage.setItem('synth_theme', t); theme=t; }
-function showEvolveOverlay(onDoneText="Industrial core online."){
-  evolveOverlay.style.display='flex'; evolveBar.style.width='0%'; evolveSub.textContent='Initializing...';
-  let progress=0; const iv=setInterval(()=>{
-    progress += Math.random()*18; if (progress>100) progress=100; evolveBar.style.width = progress + '%'; evolveSub.textContent = `Loading ${Math.floor(progress)}%...`;
-    if (progress>=100){ clearInterval(iv); setTimeout(()=>{ evolveSub.textContent = onDoneText; setTimeout(()=> evolveOverlay.style.display='none',400); },500); }
-  },220);
-}
-
-/* ---------- Reactor: improved model with delayed term + meltdown ---------- */
-let coreTemp=300; let powerOutput=500; let rodLevel=50; let coolantFlow=50;
-let reactivity = 0.0; // effective rho
-let delayedInventory = 0; // simplistic "delayed neutron" reservoir
-let scrammed = false;
-let melted = false;
-
-const coreTempNode = document.getElementById('coreTemp'), powerNode=document.getElementById('powerOutput');
-const reactivityNode=document.getElementById('reactivity'), rodNode=document.getElementById('rodLevel'), coolantNode=document.getElementById('coolantFlow');
-
-const coreGlow = document.getElementById('coreGlow'), coreSolid=document.getElementById('coreSolid'), coolantPulse=document.getElementById('coolantPulse');
-const rods = [document.getElementById('rod1'),document.getElementById('rod2'),document.getElementById('rod3'),document.getElementById('rod4'),
-              document.getElementById('rodTip1'),document.getElementById('rodTip2'),document.getElementById('rodTip3'),document.getElementById('rodTip4')];
-
-function updateReactorVisuals(){
-  // color by temperature:
-  const t = Math.max(200, Math.min(coreTemp, 2000));
-  const ratio = (t - 200) / (2000 - 200); // 0..1
-  // hue from blue(220) to red(10)
-  const hue = 220 - (210 * ratio);
-  const color = `hsl(${Math.round(hue)}, 100%, ${Math.round(35 + 30*ratio)}%)`;
-  coreGlow.style.fill = color; coreSolid.style.fill = color;
-  const glowScale = 1 + Math.min(3.0, (t - 200)/400);
-  coreGlow.setAttribute('r', 60 * glowScale);
-
-  // coolant pulse based on coolantFlow
-  coolantPulse.style.opacity = (0.12 + (coolantFlow/100)*0.6).toString();
-  coolantPulse.style.stroke = (theme==='industrial' ? '#ffd8b3' : '#bbf');
-  coolantPulse.style.strokeDasharray = '12 18';
-  // animate stroke dashoffset (visual movement)
-  coolantPulse.style.strokeDashoffset = String((Date.now()/40) % 36);
-
-  // rods positions: increased rodLevel -> deeper insertion
-  const baseTop = 80; const tipBase = 160;
-  rods.forEach((node, idx)=>{
-    if (idx < 4){
-      const insertDepth = (rodLevel/100)*80;
-      node.setAttribute('y', baseTop + insertDepth);
-      node.setAttribute('height', 80 - insertDepth);
-    } else {
-      const insertDepth = (rodLevel/100)*40;
-      node.setAttribute('y', tipBase + insertDepth);
-      node.setAttribute('height', 40 - insertDepth);
+    function returnToTerminal() {
+      for (let p in pages) pages[p].style.display = 'none';
+      terminal.style.display = 'block';
+      commandInput.focus();
     }
-  });
 
-  // text
-  coreTempNode.textContent = Math.round(coreTemp);
-  powerNode.textContent = Math.round(powerOutput);
-  reactivityNode.textContent = reactivity.toFixed(3);
-  rodNode.textContent = Math.round(rodLevel);
-  coolantNode.textContent = Math.round(coolantFlow);
-}
-
-// Reactor physics tick: more advanced model
-function reactorTick(){
-  if (melted) return;
-  // reactivity baseline from external perturbations (random noise)
-  const noise = (Math.random()-0.5) * 0.002; // very small
-  // reactivity contribution from rods: fewer inserted => positive reactivity
-  const rodContribution = (50 - rodLevel) / 1000.0; // -0.05..+0.05
-  // feedback: temp increases -> negative reactivity (Doppler-like)
-  const feedback = - (coreTemp - 300) / 20000; // gentle negative feedback
-
-  // delayed inventory simple model: immediate reactivity produces a fraction added to delayedInventory which then releases over time
-  const immediate = rodContribution + noise;
-  delayedInventory += immediate * 0.4; // fraction stored as delayed
-  const delayedRelease = delayedInventory * 0.12; delayedInventory -= delayedRelease;
-
-  reactivity = immediate * 0.6 + delayedRelease + feedback;
-  // if scrammed, force reactivity strongly negative
-  if (scrammed) reactivity = Math.min(reactivity, -0.05);
-
-  // power scales exponentially with reactivity (simplified); limit growth
-  powerOutput = Math.max(0, powerOutput + powerOutput * reactivity);
-  // temperature dynamics: power increases temp, coolant removes heat
-  coreTemp += (powerOutput / 1000) - (coolantFlow / 10); // coarse
-  // decay heat after SCRAM: if scrammed, there's residual decay heat
-  if (scrammed) coreTemp += Math.max(0, (powerOutput * 0.001));
-
-  // clamp
-  coreTemp = Math.max(50, Math.min(coreTemp, 2500));
-  powerOutput = Math.max(0, Math.min(powerOutput, 50000));
-
-  // stochastic perturbation events (e.g., pump hiccup)
-  if (Math.random() < 0.005){
-    // small transient upset: pump decrease or small rod motion
-    const upset = (Math.random()>0.5? -10 : 10);
-    coolantFlow = Math.max(0, Math.min(100, coolantFlow + upset));
-    termContent += 'NOTICE: transient coolant fluctuation detected.\n';
-  }
-
-  // update visuals
-  updateReactorVisuals();
-
-  // safety logic
-  if (!scrammed && coreTemp > 1000){
-    termContent += 'AUTO-SCRAM triggered due to rapidly rising temperature.\n';
-    scrammed = true;
-  }
-  if (coreTemp > 1700 && !melted){
-    triggerMeltdown('Core integrity breach: temperature exceeded 1700°C.');
-  }
-  // log extreme events to visitor log
-  if (coreTemp > 1400 && Math.random() < 0.02){
-    appendVisitor('ALERT-TEMP:'+Math.round(coreTemp));
-  }
-}
-
-// meltdown sequence
-function triggerMeltdown(msg){
-  melted = true;
-  scrammed = true;
-  meltdownOverlay.style.display = 'flex';
-  meltdownMsg.textContent = msg;
-  termContent += '!!! MELTDOWN: core failure recorded. Simulation halted.\n';
-  appendVisitor('MELTDOWN:'+new Date().toISOString());
-  renderTerminal();
-}
-
-/* control functions accessible to UI */
-function adjustRods(delta){
-  if (melted) return;
-  rodLevel = Math.max(0, Math.min(100, rodLevel + delta));
-  updateReactorVisuals();
-}
-function adjustCoolant(delta){
-  if (melted) return;
-  coolantFlow = Math.max(0, Math.min(100, coolantFlow + delta));
-  updateReactorVisuals();
-}
-function resetReactor(){
-  // restore baseline
-  coreTemp = 300; powerOutput = 500; rodLevel = 50; coolantFlow = 50; reactivity = 0; delayedInventory=0; scrammed=false; melted=false;
-  meltdownOverlay.style.display='none';
-  termContent += 'Reactor simulation reset.\n';
-  renderTerminal();
-  updateReactorVisuals();
-}
-resetReactorBtn.addEventListener('click', resetReactor);
-
-/* run tick */
-setInterval(reactorTick, 900);
-
-/* ---------- Commands ---------- */
-function handleCommand(cmd){
-  switch(cmd){
-    case 'help':
-      termContent += "Available commands:\n  help       — show this help\n  design     — open design viewer\n  portal     — open calendar/organizer\n  log        — visitor IP log\n  nuclear    — reactor simulation\n  evolve     — toggle industrial theme (with loading)\n  synthwave  — toggle back to synthwave theme\n  clear      — clear terminal\n";
-      break;
-    case 'design':
-      terminal.style.display='none'; hideAllPages(); designPage.style.display='block'; loadRandomImage();
-      break;
-    case 'portal':
-      terminal.style.display='none'; hideAllPages(); portalPage.style.display='block'; renderEvents(); requestNotificationPermission();
-      break;
-    case 'log':
-      terminal.style.display='none'; hideAllPages(); logPage.style.display='block'; renderIPs(); fetchServerLogs(); fetchIPandStore();
-      break;
-    case 'nuclear':
-      terminal.style.display='none'; hideAllPages(); nuclearPage.style.display='block'; updateReactorVisuals();
-      break;
-    case 'evolve':
-      if (theme === 'industrial') termContent += 'Already in industrial mode.\n';
-      else { termContent += 'Evolving to industrial theme...\n'; renderTerminal(); showEvolveOverlay('Industrial core online.'); setTimeout(()=>{ setTheme('industrial'); termContent += 'Theme: industrial\n'; renderTerminal(); }, 2200); }
-      break;
-    case 'synthwave':
-      if (theme === 'synthwave') termContent += 'Already in synthwave mode.\n';
-      else { termContent += 'Reverting to synthwave...\n'; renderTerminal(); showEvolveOverlay('Synthwave restored.'); setTimeout(()=>{ setTheme('synthwave'); termContent += 'Theme: synthwave\n'; renderTerminal(); }, 1600); }
-      break;
-    case 'clear':
-      termContent = '';
-      break;
-    case '':
-      break;
-    default:
-      termContent += `${cmd}: command not found\n`;
-  }
-}
-
-/* ---------- Boot ---------- */
-function bootTerminal(){
-  terminal.style.display='block';
-  termContent = 'Welcome to SynthwaveOS v5 — Advanced build\nType \'help\' to see commands.\n';
-  renderTerminal();
-}
-setTimeout(()=>{ bootTerminal(); renderTerminal(); }, 600);
-
-/* clickable focus */
-terminal.addEventListener('click', ()=> commandInput.focus());
-
-/* initial renders & loads */
-renderEvents(); renderIPs(); updateReactorVisuals();
-
-/* ---------- small conveniences ---------- */
-document.addEventListener('keydown', (e)=>{
-  if (e.key === 't' && (e.ctrlKey || e.metaKey)){
-    if (theme === 'synthwave') handleCommand('evolve'); else handleCommand('synthwave');
-  }
-});
-
-/* ---------- server log fetch (if server provided) ---------- */
-function fetchServerLogs(){
-  if (!serverBase) return;
-  fetch(serverBase + '/api/visits').then(r=>r.json()).then(j=>{
-    if (Array.isArray(j.visits)){ saveVisitorIPs(j.visits); renderIPs(); }
-  }).catch(()=>{});
-}
-
-/* ---------- initial IP try (best-effort) ---------- */
-fetchIPandStore();
-
-/* ---------- schedule in-page notifications for future events ---------- */
-function schedulePendingNotifications(){
-  // cancel existing
-  if (window._scheduledTimeouts){ window._scheduledTimeouts.forEach(clearTimeout); }
-  window._scheduledTimeouts = [];
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-  const arr = loadEvents();
-  const now = Date.now();
-  arr.forEach(ev=>{
-    const when = new Date(ev.when).getTime();
-    const delta = when - now;
-    if (delta > 0 && delta < 1000 * 60 * 60 * 24 * 7){
-      const t = setTimeout(()=> new Notification('Event Reminder', {body: ev.title + ' — ' + new Date(ev.when).toLocaleString()}), delta);
-      window._scheduledTimeouts.push(t);
+    function runCommand(cmd) {
+      cmd = cmd.toLowerCase();
+      if (cmd === "help") {
+        termText += "Available commands:\n";
+        termText += "design, portal, log, nuclear, solar, music, evolve, synthwave, clear\n> ";
+      }
+      else if (cmd === "clear") {
+        termText = "";
+      }
+      else if (cmd === "design") {
+        terminal.style.display = 'none';
+        pages.design.style.display = 'flex';
+        document.getElementById('photo').src = `https://source.unsplash.com/random/800x600/?interior&sig=${Date.now()}`;
+      }
+      else if (cmd === "portal") {
+        terminal.style.display = 'none';
+        pages.portal.style.display = 'flex';
+      }
+      else if (cmd === "log") {
+        terminal.style.display = 'none';
+        pages.log.style.display = 'flex';
+        document.getElementById('logOutput').textContent = "Visitor IPs:\n192.168.0.14\n192.168.0.22\n83.244.55.17";
+      }
+      else if (cmd === "nuclear") {
+        terminal.style.display = 'none';
+        pages.nuclear.style.display = 'flex';
+        startReactor();
+      }
+      else if (cmd === "solar") {
+        terminal.style.display = 'none';
+        pages.solar.style.display = 'flex';
+        startSolar();
+      }
+      else if (cmd === "music") {
+        terminal.style.display = 'none';
+        pages.music.style.display = 'flex';
+      }
+      else if (cmd === "evolve") {
+        evolveTheme();
+      }
+      else if (cmd === "synthwave") {
+        document.body.classList.remove('industrial');
+        document.body.classList.add('synthwave');
+        termText += "[SYSTEM] Switched to Synthwave mode\n> ";
+      }
+      else {
+        termText += cmd + ": command not found\n> ";
+      }
+      terminal.textContent = termText;
+      terminal.appendChild(commandInput);
+      commandInput.value = "";
     }
-  });
-}
-function requestNotificationPermission(){
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'default'){ Notification.requestPermission().then(p=>{ if (p === 'granted') schedulePendingNotifications(); }); }
-  else if (Notification.permission === 'granted') schedulePendingNotifications();
-}
 
-/* expose handleCommand to outer scope for input processing */
-function hideAllPages(){ [designPage,portalPage,logPage,nuclearPage].forEach(p=>p.style.display='none'); }
+    commandInput.addEventListener('keydown', (e) => {
+      if (e.key === "Enter") {
+        const cmd = commandInput.value.trim();
+        termText += cmd + "\n";
+        runCommand(cmd);
+      }
+    });
 
-/* terminal input wiring is earlier; but ensure renderTerminal initially */
-renderTerminal();
-</script>
+    /* THEME EVOLVE */
+    function evolveTheme(){
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.style.display = 'flex';
+      setTimeout(()=>{
+        overlay.style.display = 'none';
+        document.body.classList.remove('synthwave');
+        document.body.classList.add('industrial');
+        termText += "[SYSTEM] Industrial Protocol Online\n> ";
+        terminal.textContent = termText;
+        terminal.appendChild(commandInput);
+      },4000);
+    }
+
+    /* MUSIC */
+    function playMusic(url){
+      document.getElementById('musicFrame').src = url;
+    }
+
+    /* Nuclear Reactor */
+    let reactorInterval;
+    function startReactor(){
+      const canvas = document.getElementById('reactorCanvas');
+      const ctx = canvas.getContext('2d');
+      let temp = 300, pressure = 100, rods = 50, coolant = 50;
+
+      if(reactorInterval) clearInterval(reactorInterval);
+      reactorInterval = setInterval(()=>{
+        // simulate
+        temp += (50-rods)*0.1 - coolant*0.05;
+        pressure = temp/3 + coolant;
+        // draw
+        ctx.clearRect(0,0,500,500);
+        // core
+        let color = temp<400?"blue":temp<600?"green":temp<800?"orange":"red";
+        ctx.fillStyle=color;
+        ctx.beginPath();
+        ctx.arc(250,250,80,0,Math.PI*2);
+        ctx.fill();
+        // rods
+        ctx.fillStyle="grey";
+        for(let i=0;i<4;i++){
+          ctx.fillRect(180+i*40, 170, 10, rods);
+        }
+        // coolant loop
+        ctx.strokeStyle="cyan";
+        ctx.lineWidth=4;
+        ctx.beginPath();
+        ctx.arc(250,250,150,0,Math.PI*2);
+        ctx.stroke();
+        ctx.lineWidth=2;
+        ctx.strokeStyle="cyan";
+        ctx.setLineDash([10,10]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        document.getElementById('reactorStats').textContent =
+          `Temp: ${temp.toFixed(1)}K\nPressure: ${pressure.toFixed(1)} Pa\nControl Rods: ${rods}%\nCoolant Flow: ${coolant}%`;
+      },200);
+    }
+
+    /* Solar System */
+    let solarAnim;
+    function startSolar(){
+      const canvas = document.getElementById('solarCanvas');
+      const ctx = canvas.getContext('2d');
+      let t=0;
+      if(solarAnim) cancelAnimationFrame(solarAnim);
+      function draw(){
+        ctx.clearRect(0,0,600,600);
+        ctx.fillStyle="yellow";
+        ctx.beginPath();
+        ctx.arc(300,300,20,0,Math.PI*2);
+        ctx.fill();
+        // planets
+        const planets=[
+          {r:50,speed:0.04,color:"grey"},
+          {r:90,speed:0.03,color:"orange"},
+          {r:130,speed:0.02,color:"blue"},
+          {r:170,speed:0.015,color:"red"},
+        ];
+        planets.forEach((p,i)=>{
+          let angle=t*p.speed;
+          let x=300+Math.cos(angle)*p.r;
+          let y=300+Math.sin(angle)*p.r;
+          ctx.strokeStyle="rgba(255,255,255,0.2)";
+          ctx.beginPath();
+          ctx.arc(300,300,p.r,0,Math.PI*2);
+          ctx.stroke();
+          ctx.fillStyle=p.color;
+          ctx.beginPath();
+          ctx.arc(x,y,8,0,Math.PI*2);
+          ctx.fill();
+        });
+        t+=1;
+        solarAnim=requestAnimationFrame(draw);
+      }
+      draw();
+    }
+  </script>
 </body>
 </html>
